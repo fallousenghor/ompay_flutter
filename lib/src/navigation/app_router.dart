@@ -24,10 +24,15 @@ class AppRouter {
       ),
       GoRoute(
         path: '/pin',
-        builder: (context, state) => const PinCodeEntryPage(
-          isFirstLogin: false, // valeur par défaut, à adapter selon le besoin
-          phoneNumber: '', // valeur par défaut, à adapter selon le besoin
-        ),
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>? ?? {};
+          final isFirst = extra['isFirstLogin'] as bool? ?? false;
+          final phone = extra['phoneNumber'] as String? ?? '';
+          return PinCodeEntryPage(
+            isFirstLogin: isFirst,
+            phoneNumber: phone,
+          );
+        },
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

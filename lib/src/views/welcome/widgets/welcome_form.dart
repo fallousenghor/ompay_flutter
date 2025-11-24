@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_app/src/models/auth_models/auth_models.dart';
-import 'package:flutter_app/src/providers/service_provider.dart';
+// Provider/backend calls are now handled by the OTP page when needed.
 import 'package:go_router/go_router.dart';
 
 class WelcomeForm extends StatefulWidget {
@@ -38,38 +36,26 @@ class _WelcomeFormState extends State<WelcomeForm> {
     // Format phone number with +221 prefix for backend
     final formattedPhoneNumber = '+221$phoneNumber';
 
+    // Navigate immediately to OTP page and let the OTP page request the token
+    // if it's missing. This improves UX and allows testing the OTP UI
+    // even if the backend call is still pending or fails.
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    try {
-      final serviceProvider =
-          Provider.of<ServiceProvider>(context, listen: false);
-      final result = await serviceProvider.authService.initiateLogin(
-        InitiateLoginRequest(numeroTelephone: formattedPhoneNumber),
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Redirection vers la page de vérification...')),
       );
-
-      if (result.success && result.data != null) {
-        // Navigation vers la page OTP après le succès, dans un post-frame callback
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          GoRouter.of(context).go('/otp', extra: {
-            'phoneNumber': formattedPhoneNumber,
-            'token': result.data!.token ?? '',
-          });
-        });
-      } else {
-        setState(() {
-          _errorMessage =
-              result.message ?? 'Erreur lors de l\'initiation de la connexion';
-        });
-      }
-    } catch (e) {
-      debugPrint('💥 Exception caught: $e');
-      setState(() {
-        _errorMessage = 'Erreur réseau: $e';
+      GoRouter.of(context).go('/otp', extra: {
+        'phoneNumber': formattedPhoneNumber,
+        'token': '',
       });
-    } finally {
+    });
+
+    if (mounted) {
       setState(() {
         _isLoading = false;
       });

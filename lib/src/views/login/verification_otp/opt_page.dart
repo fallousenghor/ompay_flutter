@@ -30,17 +30,69 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
   @override
   void initState() {
     super.initState();
+    // Initialize values from constructor extras
+    _phoneNumber = widget.phoneNumber;
+    _token = widget.token;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNodes[0].requestFocus();
 
-      // Use constructor-provided values (AppRouter passes them via state.extra)
-      _phoneNumber = widget.phoneNumber;
-      _token = widget.token;
+      // If phone number is missing, show an error. If the token is
+      // missing but phone is present, request a token from the backend.
+      if (_phoneNumber.isEmpty) {
+        setState(() {
+          _errorMessage = 'Numéro de téléphone manquant';
+        });
+        return;
+      }
 
-      if (_phoneNumber.isEmpty || _token.isEmpty) {
-        _errorMessage = 'Arguments manquants';
+      if (_token.isEmpty) {
+        // Request a token to be sent to the phone number
+        _requestToken();
       }
     });
+  }
+
+  Future<void> _requestToken() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final serviceProvider =
+          Provider.of<ServiceProvider>(context, listen: false);
+      final result = await serviceProvider.authService.initiateLogin(
+        InitiateLoginRequest(numeroTelephone: _phoneNumber),
+      );
+
+      if (result.success && result.data != null) {
+        if (!mounted) return;
+        setState(() {
+          _token = result.data!.token ?? '';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Code OTP envoyé')),
+        );
+        debugPrint('requestToken: token=${result.data!.token}');
+      } else {
+        if (!mounted) return;
+        setState(() {
+          _errorMessage =
+              result.message ?? 'Erreur lors de la demande du code OTP';
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Erreur réseau: $e';
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   final List<TextEditingController> _controllers = List.generate(
@@ -89,23 +141,40 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       if (result.success && result.data != null) {
         final response = result.data!;
 
+        // Debug: log verification response status and phone/token
+        debugPrint(
+            'verifyOtp: status=${response.status}, phone=$_phoneNumber, token=$_token');
+
         // Handle different verification statuses
         switch (response.status) {
           case 'user_created':
           case 'user_linked':
             // Navigate to PIN creation/setup
-            // ignore: use_build_context_synchronously
-            GoRouter.of(context).go('/pin', extra: {
-              'isFirstLogin': true,
-              'phoneNumber': _phoneNumber,
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              debugPrint(
+                  'Navigating to /pin (create) with phone=$_phoneNumber');
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Redirection vers création de PIN...')),
+              );
+              GoRouter.of(context).go('/pin', extra: {
+                'isFirstLogin': true,
+                'phoneNumber': _phoneNumber,
+              });
             });
             break;
           case 'logged_in':
             // User already exists, navigate to PIN entry for login
-            // ignore: use_build_context_synchronously
-            GoRouter.of(context).go('/pin', extra: {
-              'isFirstLogin': false,
-              'phoneNumber': _phoneNumber,
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              debugPrint('Navigating to /pin (login) with phone=$_phoneNumber');
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Redirection vers saisie du PIN...')),
+              );
+              GoRouter.of(context).go('/pin', extra: {
+                'isFirstLogin': false,
+                'phoneNumber': _phoneNumber,
+              });
             });
             break;
           default:
@@ -143,19 +212,24 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       );
 
       if (result.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Code OTP renvoyé')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Code OTP renvoyé')),
+          );
+        }
       } else {
+        if (!mounted) return;
         setState(() {
           _errorMessage = result.message ?? 'Erreur lors du renvoi du code';
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Erreur réseau: $e';
       });
     } finally {
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
