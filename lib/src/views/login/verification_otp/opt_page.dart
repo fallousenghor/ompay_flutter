@@ -235,6 +235,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
         GoRouter.of(context).go('/pin', extra: {
           'isFirstLogin': isFirstLogin,
           'phoneNumber': _phoneNumber,
+          'token': _token,
         });
       } else {
         // If success but no data, or outright failure, surface more debug info

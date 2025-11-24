@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/src/models/auth_models/auth_models.dart';
 import 'package:flutter_app/src/providers/service_provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_app/src/navigation/app_router.dart';
 import 'package:flutter_app/src/views/accueil/accueil_page.dart';
 
 class PinCodeEntryPage extends StatefulWidget {
   final bool isFirstLogin;
   final String phoneNumber;
+  final String token;
 
   const PinCodeEntryPage({
     Key? key,
     required this.isFirstLogin,
     required this.phoneNumber,
+    this.token = '',
   }) : super(key: key);
 
   @override
@@ -36,23 +40,68 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
       final serviceProvider =
           Provider.of<ServiceProvider>(context, listen: false);
 
-      // Login with PIN (works for both first login and regular login)
-      final result = await serviceProvider.authService.login(
-        LoginRequest(
-          numeroTelephone: widget.phoneNumber,
-          codePin: _pinCode,
-        ),
-      );
+      if (widget.isFirstLogin) {
+        // Create account using token from OTP verification
+        final result = await serviceProvider.authService.createAccount(
+          CreateAccountRequest(
+            numeroTelephone: widget.phoneNumber,
+            codePin: _pinCode,
+            token: widget.token,
+          ),
+        );
 
-      if (result.success && result.data != null) {
-        // Set auth token and navigate to home
-        serviceProvider.setAuthToken(result.data!.sessionToken);
-        _navigateToHome();
+        if (result.success) {
+          // If server returned a session token, store it.
+          if (result.data != null && result.data!.sessionToken.isNotEmpty) {
+            serviceProvider.setAuthToken(result.data!.sessionToken);
+            debugPrint(
+                'PIN createAccount succeeded, sessionToken=${result.data!.sessionToken}');
+          } else {
+            debugPrint('createAccount succeeded but no sessionToken provided');
+          }
+          // Navigate to home even if server didn't return a session token
+          // (server may use another auth mechanism). This mirrors server
+          // behaviour where success=true indicates account created.
+          try {
+            _navigateToHome();
+          } catch (e, st) {
+            debugPrint('Navigation to home failed: $e\n$st');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Navigation failed: $e')),
+              );
+            }
+          }
+        } else {
+          setState(() {
+            _errorMessage = result.message ?? 'Erreur création de compte';
+            _pinCode = '';
+          });
+        }
       } else {
-        setState(() {
-          _errorMessage = result.message ?? 'Code PIN incorrect';
-          _pinCode = ''; // Reset PIN on error
-        });
+        // Regular login with PIN
+        final result = await serviceProvider.authService.login(
+          LoginRequest(
+            numeroTelephone: widget.phoneNumber,
+            codePin: _pinCode,
+          ),
+        );
+
+        if (result.success) {
+          if (result.data != null && result.data!.sessionToken.isNotEmpty) {
+            serviceProvider.setAuthToken(result.data!.sessionToken);
+            debugPrint(
+                'PIN login succeeded, sessionToken=${result.data!.sessionToken}');
+          } else {
+            debugPrint('login succeeded but no sessionToken provided');
+          }
+          _navigateToHome();
+        } else {
+          setState(() {
+            _errorMessage = result.message ?? 'Code PIN incorrect';
+            _pinCode = ''; // Reset PIN on error
+          });
+        }
       }
     } catch (e) {
       setState(() {
@@ -67,10 +116,49 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
   }
 
   void _navigateToHome() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const OrangeMoneyHomePage()),
-      (route) => false,
-    );
+    debugPrint('Scheduling navigation to /home (delayed)');
+    Future.delayed(const Duration(milliseconds: 250), () async {
+      // Try GoRouter using the current BuildContext first (preferred)
+      if (mounted) {
+        try {
+          debugPrint('Attempting GoRouter.of(context).go("/home")');
+          GoRouter.of(context).go('/home');
+          debugPrint('GoRouter.of(context).go succeeded');
+          return;
+        } catch (e, st) {
+          debugPrint('GoRouter.of(context).go failed: $e\n$st');
+        }
+      } else {
+        debugPrint('Context not mounted when navigating via GoRouter.of(context)');
+      }
+
+      // Try the static router instance as a fallback
+      try {
+        debugPrint('Attempting AppRouter.router.go("/home")');
+        AppRouter.router.go('/home');
+        debugPrint('AppRouter.router.go succeeded');
+        return;
+      } catch (e, st) {
+        debugPrint('AppRouter.router.go failed: $e\n$st');
+      }
+
+      // Last-resort: Navigator push replacement using root navigator
+      try {
+        debugPrint('Attempting Navigator.of(rootNavigator).pushAndRemoveUntil');
+        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (c) => const OrangeMoneyHomePage()),
+          (route) => false,
+        );
+        debugPrint('Navigator fallback succeeded');
+      } catch (e, st) {
+        debugPrint('Navigator fallback also failed: $e\n$st');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Navigation failed: $e')),
+          );
+        }
+      }
+    });
   }
 
   void _onNumberPressed(String number) {

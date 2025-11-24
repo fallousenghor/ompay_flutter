@@ -98,6 +98,32 @@ class AuthService {
     );
   }
 
+  // 1.3 Créer un compte après vérification OTP (enregistrer code PIN)
+  Future<ApiResponse<CreateAccountResponse>> createAccount(
+      CreateAccountRequest request) async {
+    final response = await _httpService.post<Map<String, dynamic>>(
+      '/auth/create-account',
+      request.toJson(),
+      fromJson: (m) => m,
+    );
+
+    if (response.success && response.data != null) {
+      final dataMap = response.data as Map<String, dynamic>?;
+      if (dataMap != null) {
+        final created = CreateAccountResponse.fromJson(dataMap);
+        return ApiResponse<CreateAccountResponse>(
+          success: true,
+          data: created,
+        );
+      }
+    }
+
+    return ApiResponse<CreateAccountResponse>(
+      success: false,
+      message: response.message ?? 'Erreur lors de la création du compte',
+    );
+  }
+
   // 1.5 Se déconnecter
   Future<ApiResponse<Map<String, dynamic>>> logout() async {
     final response = await _httpService.post<Map<String, dynamic>>(
