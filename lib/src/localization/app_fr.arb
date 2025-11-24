@@ -1,0 +1,25 @@
+{
+  "appTitle": "Application Flutter",
+  "welcome": "Bienvenue",
+  "dashboard": "Tableau de bord",
+  "changeLanguage": "Changer de langue",
+  "logout": "Déconnexion"
+  ,"otherOperation": "Pour toute autre opération"
+  ,"maxIt": "Max it"
+  ,"accessMaxIt": "Accéder à Max it"
+  ,"history": "Historique"
+  ,"noTransaction": "Vous n'avez pas encore de transaction Orange Money."
+  ,"orange": "Orange"
+  ,"money": "Money"
+  ,"transfer": "Transférer "
+  ,"moneyTransfer": "de l'argent"
+  ,"sendQuickly": "Envoyez rapidement et en toute sécurité de l'argent à un proche qui utilise Orange Money."
+  ,"darkMode": "Sombre"
+  ,"scanner": "Scanner"
+  ,"french": "Français"
+  ,"version": "OMPAY Version - 1.1.0(35)"
+  ,"payer": "Payer"
+  ,"inputMerchant": "Saisir le numéro/code marchand"
+  ,"inputAmount": "Saisir le montant"
+  ,"validate": "Valider"
+}
