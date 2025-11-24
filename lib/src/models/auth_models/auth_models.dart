@@ -34,7 +34,7 @@ class InitiateLoginResponse {
   factory InitiateLoginResponse.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>?;
     return InitiateLoginResponse(
-      message: json['message'] as String,
+      message: (json['message'] as String?) ?? '',
       code: data?['code_otp'] as String?,
       lien: data?['lien'] as String?,
       token: data?['token'] as String?,
@@ -82,7 +82,7 @@ class VerifyOtpResponse {
 
   factory VerifyOtpResponse.fromJson(Map<String, dynamic> json) {
     return VerifyOtpResponse(
-      status: json['status'] as String,
+      status: (json['status'] as String?) ?? '',
       numeroTelephone: json['numero_telephone'] as String?,
       token: json['token'] as String?,
       user: json['user'] != null
@@ -135,8 +135,8 @@ class CreateAccountResponse {
 
   factory CreateAccountResponse.fromJson(Map<String, dynamic> json) {
     return CreateAccountResponse(
-      sessionToken: json['session_token'] as String,
-      refreshToken: json['refresh_token'] as String,
+      sessionToken: (json['session_token'] as String?) ?? '',
+      refreshToken: (json['refresh_token'] as String?) ?? '',
       user: User.fromJson(json['user'] as Map<String, dynamic>),
       qrCode: QrCode.fromJson(json['qr_code'] as Map<String, dynamic>),
     );
@@ -177,8 +177,8 @@ class LoginResponse {
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
-      sessionToken: json['session_token'] as String,
-      refreshToken: json['refresh_token'] as String,
+      sessionToken: (json['session_token'] as String?) ?? '',
+      refreshToken: (json['refresh_token'] as String?) ?? '',
       user: User.fromJson(json['user'] as Map<String, dynamic>),
       qrCode: QrCode.fromJson(json['qr_code'] as Map<String, dynamic>),
       firstLogin: json['first_login'] as bool? ?? false,

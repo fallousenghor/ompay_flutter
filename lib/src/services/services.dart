@@ -146,7 +146,13 @@ class HttpService {
             : null,
       );
     } else {
-      throw Exception(responseData['message'] ?? 'Erreur inconnue');
+      // Return an ApiResponse with success=false so callers can handle
+      // backend errors gracefully and display server-provided messages.
+      return ApiResponse<T>(
+        success: false,
+        message: responseData['message'] ?? 'Erreur inconnue',
+        data: null,
+      );
     }
   }
 }

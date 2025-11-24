@@ -36,9 +36,6 @@ class _WelcomeFormState extends State<WelcomeForm> {
     // Format phone number with +221 prefix for backend
     final formattedPhoneNumber = '+221$phoneNumber';
 
-    // Navigate immediately to OTP page and let the OTP page request the token
-    // if it's missing. This improves UX and allows testing the OTP UI
-    // even if the backend call is still pending or fails.
     setState(() {
       _isLoading = true;
       _errorMessage = null;

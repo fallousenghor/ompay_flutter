@@ -2,6 +2,7 @@
 
 import 'package:flutter_app/src/models/auth_models/auth_models.dart';
 import 'package:flutter_app/src/services/services.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthService {
   final HttpService _httpService;
@@ -14,12 +15,22 @@ class AuthService {
     final response = await _httpService.post<Map<String, dynamic>>(
       '/auth/initiate',
       request.toJson(),
+      fromJson: (m) => m,
     );
 
-    if (response.success && response.data != null) {
+    if (response.success) {
+      // response.data contains the inner 'data' map (fromJson returned it as-is)
+      final dataMap = response.data as Map<String, dynamic>?;
+      final initiated = InitiateLoginResponse(
+        message: response.message ?? '',
+        code: dataMap?['code_otp'] as String?,
+        lien: dataMap?['lien'] as String?,
+        token: dataMap?['token'] as String?,
+      );
+
       return ApiResponse<InitiateLoginResponse>(
         success: true,
-        data: InitiateLoginResponse.fromJson(response.data!),
+        data: initiated,
       );
     }
 
@@ -36,14 +47,24 @@ class AuthService {
     final response = await _httpService.post<Map<String, dynamic>>(
       '/auth/verify-otp',
       request.toJson(),
+      fromJson: (m) => m,
     );
 
-    if (response.success && response.data != null) {
-      return ApiResponse<VerifyOtpResponse>(
-        success: true,
-        data: VerifyOtpResponse.fromJson(response.data!),
-      );
+    if (response.success) {
+      final dataMap = response.data as Map<String, dynamic>?;
+      if (dataMap != null) {
+        // Use the model's fromJson to build the response object
+        final verify = VerifyOtpResponse.fromJson(dataMap);
+        return ApiResponse<VerifyOtpResponse>(
+          success: true,
+          data: verify,
+        );
+      }
     }
+
+    // Debug output to help diagnostics: show what the server actually returned
+    debugPrint(
+        'verifyOtp response: success=${response.success} message=${response.message} data=${response.data}');
 
     return ApiResponse<VerifyOtpResponse>(
       success: false,
@@ -62,9 +83,8 @@ class AuthService {
       final loginResponse = LoginResponse.fromJson(response.data!);
 
       // Sauvegarder le token d'authentification
-      if (loginResponse.sessionToken != null) {
-        _httpService.setAuthToken(loginResponse.sessionToken!);
-      }
+      // Sauvegarder le token d'authentification
+      _httpService.setAuthToken(loginResponse.sessionToken);
 
       return ApiResponse<LoginResponse>(
         success: true,
