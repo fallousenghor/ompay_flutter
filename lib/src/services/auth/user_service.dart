@@ -14,7 +14,8 @@ class UserService {
     return _httpService.get<DashboardResponse>(
       '/dashboard',
       requiresAuth: true,
-      fromJson: DashboardResponse.fromJson,
+      fromJson: (data) =>
+          DashboardResponse.fromJson(data as Map<String, dynamic>),
     );
   }
 

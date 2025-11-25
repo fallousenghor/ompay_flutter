@@ -68,7 +68,7 @@ class HttpService {
   Future<ApiResponse<T>> get<T>(
     String endpoint, {
     bool requiresAuth = false,
-    T Function(Map<String, dynamic>)? fromJson,
+    T Function(dynamic)? fromJson,
     bool fullResponse = false,
   }) async {
     try {
@@ -87,7 +87,7 @@ class HttpService {
     String endpoint,
     dynamic data, {
     bool requiresAuth = false,
-    T Function(Map<String, dynamic>)? fromJson,
+    T Function(dynamic)? fromJson,
     bool fullResponse = false,
   }) async {
     try {
@@ -107,7 +107,7 @@ class HttpService {
     String endpoint,
     dynamic data, {
     bool requiresAuth = false,
-    T Function(Map<String, dynamic>)? fromJson,
+    T Function(dynamic)? fromJson,
   }) async {
     try {
       final response = await _client.put(
@@ -125,7 +125,7 @@ class HttpService {
   Future<ApiResponse<T>> delete<T>(
     String endpoint, {
     bool requiresAuth = false,
-    T Function(Map<String, dynamic>)? fromJson,
+    T Function(dynamic)? fromJson,
   }) async {
     try {
       final response = await _client.delete(
@@ -141,7 +141,7 @@ class HttpService {
 
   ApiResponse<T> _handleResponse<T>(
     http.Response response,
-    T Function(Map<String, dynamic>)? fromJson, {
+    T Function(dynamic)? fromJson, {
     bool fullResponse = false,
   }) {
     debugPrint(

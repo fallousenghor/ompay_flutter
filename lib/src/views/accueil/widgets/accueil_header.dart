@@ -3,9 +3,22 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/src/providers/service_provider.dart';
 
-class AccueilHeader extends StatelessWidget {
+class AccueilHeader extends StatefulWidget {
   final VoidCallback? openDrawer;
   const AccueilHeader({super.key, this.openDrawer});
+
+  @override
+  State<AccueilHeader> createState() => _AccueilHeaderState();
+}
+
+class _AccueilHeaderState extends State<AccueilHeader> {
+  bool _isBalanceVisible = true;
+
+  void _toggleBalanceVisibility() {
+    setState(() {
+      _isBalanceVisible = !_isBalanceVisible;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +31,9 @@ class AccueilHeader extends StatelessWidget {
             ? '${user.nomComplet} '
             : user.numeroTelephone)
         : 'Utilisateur non connecté';
-    final String displayBalance =
-        balance != null ? balance.toStringAsFixed(0) : 'Non disponible';
+    final String displayBalance = _isBalanceVisible
+        ? (balance != null ? balance.toStringAsFixed(0) : 'Non disponible')
+        : '••••••';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
@@ -50,7 +64,7 @@ class AccueilHeader extends StatelessWidget {
                         IconButton(
                           icon: const Icon(Icons.menu,
                               color: Colors.white, size: 28),
-                          onPressed: openDrawer,
+                          onPressed: widget.openDrawer,
                         ),
                         const Spacer(),
                         Container(
@@ -122,16 +136,21 @@ class AccueilHeader extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: const BoxDecoration(
-                            color: Colors.white24,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.remove_red_eye_outlined,
-                            color: Colors.white,
-                            size: 18,
+                        GestureDetector(
+                          onTap: _toggleBalanceVisibility,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: const BoxDecoration(
+                              color: Colors.white24,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              _isBalanceVisible
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                           ),
                         ),
                       ],

@@ -14,7 +14,8 @@ class UserService {
     return _httpService.get<DashboardResponse>(
       '/$accountNumber/dashboard',
       requiresAuth: true,
-      fromJson: DashboardResponse.fromJson,
+      fromJson: (data) =>
+          DashboardResponse.fromJson(data as Map<String, dynamic>),
     );
   }
 
@@ -22,7 +23,7 @@ class UserService {
     return _httpService.get<User>(
       '/$accountNumber/user',
       requiresAuth: true,
-      fromJson: User.fromJson,
+      fromJson: (data) => User.fromJson(data as Map<String, dynamic>),
     );
   }
 

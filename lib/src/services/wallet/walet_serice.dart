@@ -12,7 +12,7 @@ class WalletService {
     final response = await _httpService.get<String>(
       '/$accountNumber/portefeuille/solde',
       requiresAuth: true,
-      fromJson: (m) => m['data'] as String,
+      fromJson: (data) => data as String,
     );
 
     if (response.success && response.data != null) {
@@ -75,7 +75,8 @@ class WalletService {
     return _httpService.get<TransactionDetail>(
       '/$accountNumber/portefeuille/transactions/$transactionId',
       requiresAuth: true,
-      fromJson: TransactionDetail.fromJson,
+      fromJson: (data) =>
+          TransactionDetail.fromJson(data as Map<String, dynamic>),
     );
   }
 }
