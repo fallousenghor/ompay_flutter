@@ -77,18 +77,45 @@ class AuthService {
     final response = await _httpService.post<Map<String, dynamic>>(
       '/auth/login',
       request.toJson(),
+      fromJson: (m) => m,
     );
 
-    if (response.success && response.data != null) {
-      final loginResponse = LoginResponse.fromJson(response.data!);
+    if (response.success &&
+        response.data != null &&
+        response.data is Map<String, dynamic>) {
+      final dataMap = response.data as Map<String, dynamic>;
 
-      // Sauvegarder le token d'authentification
-      // Sauvegarder le token d'authentification
-      _httpService.setAuthToken(loginResponse.sessionToken);
+      debugPrint('login response data: $dataMap');
+
+      // Try to retrieve token from known keys flexibly
+      String? token = dataMap['token'] as String?; // Access token for auth
+      if (token == null || token.isEmpty) {
+        token =
+            dataMap['refresh_token'] as String?; // fallback to refresh_token
+      }
+
+      final loginResponse = LoginResponse.fromJson(dataMap);
+
+      if (token == null || token.isEmpty) {
+        debugPrint(
+            'Warning: Login successful but sessionToken is null or empty.');
+      } else {
+        // Sauvegarder le token d'authentification
+        _httpService.setAuthToken(token);
+        debugPrint('Token set in HttpService: $token');
+      }
 
       return ApiResponse<LoginResponse>(
         success: true,
         data: loginResponse,
+      );
+    } else if (response.success && response.message == "connexion reussie") {
+      debugPrint(
+          'Warning: Login successful but no data returned, no sessionToken available.');
+      return ApiResponse<LoginResponse>(
+        success: true,
+        data: null,
+        message: response.message,
       );
     }
 

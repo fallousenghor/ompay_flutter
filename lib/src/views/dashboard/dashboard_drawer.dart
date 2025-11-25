@@ -3,34 +3,56 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/src/localization/locale_provider.dart';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_app/src/localization/locale_provider.dart';
+import 'package:flutter_app/src/providers/service_provider.dart';
+
 class DashboardDrawer extends StatelessWidget {
   const DashboardDrawer({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final serviceProvider = Provider.of<ServiceProvider>(context);
+    final user = serviceProvider.currentUser;
+    final String fullName = (user?.nomComplet.isNotEmpty ?? false)
+        ? user!.nomComplet
+        : 'Utilisateur non connecté';
+    final String phoneNumber = user?.numeroTelephone ?? 'Numéro inconnu';
+
     return Drawer(
       backgroundColor: const Color(0xFF3D3D3D),
       child: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 24),
-            const CircleAvatar(
+            CircleAvatar(
               radius: 38,
               backgroundColor: Colors.white24,
-              child: Icon(Icons.person, size: 48, color: Colors.white),
+              child: user == null
+                  ? const Icon(Icons.person, size: 48, color: Colors.white)
+                  : Text(
+                      fullName.isNotEmpty ? fullName[0] : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Fallou Senghor', // À remplacer par une variable utilisateur si besoin
-              style: TextStyle(
+            Text(
+              fullName,
+              style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
-            const Text(
-              '782463262', // À remplacer par une variable utilisateur si besoin
-              style: TextStyle(
+            Text(
+              phoneNumber,
+              style: const TextStyle(
                   color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w400),

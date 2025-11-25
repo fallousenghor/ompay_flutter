@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:flutter_app/src/models/auth_models/auth_models.dart';
 import 'package:flutter_app/src/providers/service_provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_app/src/navigation/app_router.dart';
-import 'package:flutter_app/src/views/accueil/accueil_page.dart';
 
 class PinCodeEntryPage extends StatefulWidget {
   final bool isFirstLogin;
@@ -62,16 +60,10 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
           // Navigate to home even if server didn't return a session token
           // (server may use another auth mechanism). This mirrors server
           // behaviour where success=true indicates account created.
-          try {
-            _navigateToHome();
-          } catch (e, st) {
-            debugPrint('Navigation to home failed: $e\n$st');
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Navigation failed: $e')),
-              );
-            }
-          }
+          setState(() {
+            _isLoading = false;
+          });
+          _navigateToHome();
         } else {
           setState(() {
             _errorMessage = result.message ?? 'Erreur création de compte';
@@ -90,11 +82,17 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
         if (result.success) {
           if (result.data != null && result.data!.sessionToken.isNotEmpty) {
             serviceProvider.setAuthToken(result.data!.sessionToken);
+            if (result.data!.user != null) {
+              serviceProvider.setCurrentUser(result.data!.user!);
+            }
             debugPrint(
                 'PIN login succeeded, sessionToken=${result.data!.sessionToken}');
           } else {
             debugPrint('login succeeded but no sessionToken provided');
           }
+          setState(() {
+            _isLoading = false;
+          });
           _navigateToHome();
         } else {
           setState(() {
@@ -116,49 +114,7 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
   }
 
   void _navigateToHome() {
-    debugPrint('Scheduling navigation to /home (delayed)');
-    Future.delayed(const Duration(milliseconds: 250), () async {
-      // Try GoRouter using the current BuildContext first (preferred)
-      if (mounted) {
-        try {
-          debugPrint('Attempting GoRouter.of(context).go("/home")');
-          GoRouter.of(context).go('/home');
-          debugPrint('GoRouter.of(context).go succeeded');
-          return;
-        } catch (e, st) {
-          debugPrint('GoRouter.of(context).go failed: $e\n$st');
-        }
-      } else {
-        debugPrint('Context not mounted when navigating via GoRouter.of(context)');
-      }
-
-      // Try the static router instance as a fallback
-      try {
-        debugPrint('Attempting AppRouter.router.go("/home")');
-        AppRouter.router.go('/home');
-        debugPrint('AppRouter.router.go succeeded');
-        return;
-      } catch (e, st) {
-        debugPrint('AppRouter.router.go failed: $e\n$st');
-      }
-
-      // Last-resort: Navigator push replacement using root navigator
-      try {
-        debugPrint('Attempting Navigator.of(rootNavigator).pushAndRemoveUntil');
-        Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (c) => const OrangeMoneyHomePage()),
-          (route) => false,
-        );
-        debugPrint('Navigator fallback succeeded');
-      } catch (e, st) {
-        debugPrint('Navigator fallback also failed: $e\n$st');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Navigation failed: $e')),
-          );
-        }
-      }
-    });
+    context.go('/home');
   }
 
   void _onNumberPressed(String number) {
@@ -255,7 +211,7 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
                         ? 'Veuillez créer votre code secret Orange Money !'
                         : 'Veuillez saisir votre code secret Orange Money !',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
                       color: Colors.white70,
                       height: 1.4,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_app/src/providers/service_provider.dart';
 
 class AccueilHeader extends StatelessWidget {
   final VoidCallback? openDrawer;
@@ -7,6 +9,18 @@ class AccueilHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final serviceProvider = Provider.of<ServiceProvider>(context);
+    final user = serviceProvider.currentUser;
+    final balance = serviceProvider.currentBalance;
+
+    final String fullName = user != null
+        ? (user.nomComplet.isNotEmpty
+            ? '${user.nomComplet} '
+            : user.numeroTelephone)
+        : 'Utilisateur non connecté';
+    final String displayBalance =
+        balance != null ? balance.toStringAsFixed(0) : 'Non disponible';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       color: Colors.transparent,
@@ -57,28 +71,31 @@ class AccueilHeader extends StatelessWidget {
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        RichText(
-                          text: TextSpan(
-                            children: [
-                              TextSpan(
-                                text:
-                                    AppLocalizations.of(context)!.welcome + ' ',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w400,
+                        Expanded(
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text:
+                                      '${AppLocalizations.of(context)!.welcome} ',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
-                              ),
-                              TextSpan(
-                                text:
-                                    'Abdoulaye', // À remplacer par une variable utilisateur si besoin
-                                style: const TextStyle(
-                                  color: Color(0xFFFFB800),
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
+                                TextSpan(
+                                  text: fullName,
+                                  style: const TextStyle(
+                                    color: Color(0xFFFFB800),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                       ],
@@ -86,9 +103,9 @@ class AccueilHeader extends StatelessWidget {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Text(
-                          '********',
-                          style: TextStyle(
+                        Text(
+                          displayBalance,
+                          style: const TextStyle(
                             color: Color(0xFFFFB800),
                             fontSize: 22,
                             fontWeight: FontWeight.bold,

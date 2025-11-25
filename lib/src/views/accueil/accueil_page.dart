@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_app/src/providers/service_provider.dart';
+import 'package:provider/provider.dart';
+
 import 'widgets/accueil_header.dart';
 import 'package:flutter_app/src/views/dashboard/dashboard_drawer.dart';
 import 'widgets/accueil_tabs.dart';
@@ -17,6 +21,16 @@ class _OrangeMoneyHomePageState extends State<OrangeMoneyHomePage> {
   int _selectedTab = 0; // 0 = Payer, 1 = Transférer
   final TextEditingController _numeroController = TextEditingController();
   final TextEditingController _montantController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Fetch user profile and balance when page initializes
+    final serviceProvider =
+        Provider.of<ServiceProvider>(context, listen: false);
+    serviceProvider.fetchUserProfile();
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/browser_client.dart';
 
 class ApiResponse<T> {
   final bool success;
@@ -31,12 +32,13 @@ class ApiResponse<T> {
 
 class HttpService {
   static String get baseUrl =>
-      dotenv.env['BASE_URL'] ?? 'http://localhost:8000/api';
+      dotenv.env['BASE_URL'] ?? 'http://localhost:8000/';
 
   final http.Client _client;
   String? _authToken;
 
-  HttpService({http.Client? client}) : _client = client ?? http.Client();
+  HttpService({http.Client? client})
+      : _client = client ?? (kIsWeb ? BrowserClient() : http.Client());
 
   void setAuthToken(String token) {
     _authToken = token;
@@ -54,6 +56,10 @@ class HttpService {
 
     if (requiresAuth && _authToken != null) {
       headers['Authorization'] = 'Bearer $_authToken';
+      debugPrint('Authorization header: Bearer $_authToken'); // Log pour debug
+    } else if (requiresAuth) {
+      debugPrint(
+          'WARNING: requiresAuth=true but _authToken is null'); // Log d'avertissement
     }
 
     return headers;
@@ -63,6 +69,7 @@ class HttpService {
     String endpoint, {
     bool requiresAuth = false,
     T Function(Map<String, dynamic>)? fromJson,
+    bool fullResponse = false,
   }) async {
     try {
       final response = await _client.get(
@@ -70,7 +77,7 @@ class HttpService {
         headers: _getHeaders(requiresAuth: requiresAuth),
       );
 
-      return _handleResponse<T>(response, fromJson);
+      return _handleResponse<T>(response, fromJson, fullResponse: fullResponse);
     } catch (e) {
       throw Exception('Erreur réseau: $e');
     }
@@ -81,6 +88,7 @@ class HttpService {
     dynamic data, {
     bool requiresAuth = false,
     T Function(Map<String, dynamic>)? fromJson,
+    bool fullResponse = false,
   }) async {
     try {
       final response = await _client.post(
@@ -89,7 +97,7 @@ class HttpService {
         body: json.encode(data),
       );
 
-      return _handleResponse<T>(response, fromJson);
+      return _handleResponse<T>(response, fromJson, fullResponse: fullResponse);
     } catch (e) {
       throw Exception('Erreur réseau: $e');
     }
@@ -108,7 +116,7 @@ class HttpService {
         body: json.encode(data),
       );
 
-      return _handleResponse<T>(response, fromJson);
+      return _handleResponse<T>(response, fromJson, fullResponse: false);
     } catch (e) {
       throw Exception('Erreur réseau: $e');
     }
@@ -125,7 +133,7 @@ class HttpService {
         headers: _getHeaders(requiresAuth: requiresAuth),
       );
 
-      return _handleResponse<T>(response, fromJson);
+      return _handleResponse<T>(response, fromJson, fullResponse: false);
     } catch (e) {
       throw Exception('Erreur réseau: $e');
     }
@@ -133,24 +141,50 @@ class HttpService {
 
   ApiResponse<T> _handleResponse<T>(
     http.Response response,
-    T Function(Map<String, dynamic>)? fromJson,
-  ) {
-    final Map<String, dynamic> responseData = json.decode(response.body);
+    T Function(Map<String, dynamic>)? fromJson, {
+    bool fullResponse = false,
+  }) {
+    debugPrint(
+        'API Response: status=${response.statusCode}, body=${response.body}');
+    try {
+      final responseData = json.decode(response.body);
+      if (responseData is! Map<String, dynamic>) {
+        throw Exception('Response is not a valid JSON object');
+      }
+      final Map<String, dynamic> responseDataMap = responseData;
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      return ApiResponse<T>(
-        success: responseData['success'] ?? true,
-        message: responseData['message'],
-        data: responseData['data'] != null && fromJson != null
-            ? fromJson(responseData['data'])
-            : null,
-      );
-    } else {
-      // Return an ApiResponse with success=false so callers can handle
-      // backend errors gracefully and display server-provided messages.
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return ApiResponse<T>(
+          success: responseDataMap['success'] ?? true,
+          message: responseDataMap['message'],
+          data: fullResponse
+              ? (fromJson != null
+                  ? fromJson(responseDataMap)
+                  : responseDataMap as T)
+              : (responseDataMap['data'] != null && fromJson != null
+                  ? fromJson(responseDataMap['data'])
+                  : null),
+        );
+      } else {
+        // Return an ApiResponse with success=false so callers can handle
+        // backend errors gracefully and display server-provided messages.
+        return ApiResponse<T>(
+          success: false,
+          message: responseDataMap['message'] ?? 'Erreur inconnue',
+          data: null,
+        );
+      }
+    } catch (e) {
+      if (response.body == "null") {
+        return ApiResponse<T>(
+          success: true,
+          message: 'connexion reussie',
+          data: null,
+        );
+      }
       return ApiResponse<T>(
         success: false,
-        message: responseData['message'] ?? 'Erreur inconnue',
+        message: 'Erreur de parsing JSON: $e',
         data: null,
       );
     }

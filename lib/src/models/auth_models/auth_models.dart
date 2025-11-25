@@ -123,22 +123,26 @@ class CreateAccountRequest {
 class CreateAccountResponse {
   final String sessionToken;
   final String refreshToken;
-  final User user;
-  final QrCode qrCode;
+  final User? user;
+  final QrCode? qrCode;
 
   CreateAccountResponse({
     required this.sessionToken,
     required this.refreshToken,
-    required this.user,
-    required this.qrCode,
+    this.user,
+    this.qrCode,
   });
 
   factory CreateAccountResponse.fromJson(Map<String, dynamic> json) {
     return CreateAccountResponse(
       sessionToken: (json['session_token'] as String?) ?? '',
       refreshToken: (json['refresh_token'] as String?) ?? '',
-      user: User.fromJson(json['user'] as Map<String, dynamic>),
-      qrCode: QrCode.fromJson(json['qr_code'] as Map<String, dynamic>),
+      user: json['user'] != null
+          ? User.fromJson(json['user'] as Map<String, dynamic>)
+          : null,
+      qrCode: json['qr_code'] != null
+          ? QrCode.fromJson(json['qr_code'] as Map<String, dynamic>)
+          : null,
     );
   }
 }
@@ -163,24 +167,33 @@ class LoginRequest {
 class LoginResponse {
   final String sessionToken;
   final String refreshToken;
-  final User user;
-  final QrCode qrCode;
+  final User? user;
+  final QrCode? qrCode;
   final bool firstLogin;
 
   LoginResponse({
     required this.sessionToken,
     required this.refreshToken,
-    required this.user,
-    required this.qrCode,
+    this.user,
+    this.qrCode,
     required this.firstLogin,
   });
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    // Handle both 'session_token' and 'token' keys for compatibility
+    String? sessionToken = json['session_token'] as String?;
+    if (sessionToken == null || sessionToken.isEmpty) {
+      sessionToken = json['token'] as String?;
+    }
     return LoginResponse(
-      sessionToken: (json['session_token'] as String?) ?? '',
+      sessionToken: sessionToken ?? '',
       refreshToken: (json['refresh_token'] as String?) ?? '',
-      user: User.fromJson(json['user'] as Map<String, dynamic>),
-      qrCode: QrCode.fromJson(json['qr_code'] as Map<String, dynamic>),
+      user: json['user'] != null
+          ? User.fromJson(json['user'] as Map<String, dynamic>)
+          : null,
+      qrCode: json['qr_code'] != null
+          ? QrCode.fromJson(json['qr_code'] as Map<String, dynamic>)
+          : null,
       firstLogin: json['first_login'] as bool? ?? false,
     );
   }

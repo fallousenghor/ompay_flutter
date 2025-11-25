@@ -8,16 +8,17 @@ class WalletService {
 
   WalletService(this._httpService);
 
-  Future<ApiResponse<double>> getBalance() async {
-    final response = await _httpService.get<Map<String, dynamic>>(
-      '/portefeuille/solde',
+  Future<ApiResponse<double>> getBalance(String accountNumber) async {
+    final response = await _httpService.get<String>(
+      '/$accountNumber/portefeuille/solde',
       requiresAuth: true,
+      fromJson: (m) => m['data'] as String,
     );
 
     if (response.success && response.data != null) {
       return ApiResponse<double>(
         success: true,
-        data: (response.data!['data'] as num).toDouble(),
+        data: double.parse(response.data!),
       );
     }
 
