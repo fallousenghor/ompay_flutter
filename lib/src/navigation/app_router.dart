@@ -30,10 +30,14 @@ class AppRouter {
           final isFirst = extra['isFirstLogin'] as bool? ?? false;
           final phone = extra['phoneNumber'] as String? ?? '';
           final token = extra['token'] as String? ?? '';
+          final operationType = extra['operationType'] as String?;
+          final operationId = extra['operationId'] as String?;
           return PinCodeEntryPage(
             isFirstLogin: isFirst,
             phoneNumber: phone,
             token: token,
+            operationType: operationType,
+            operationId: operationId,
           );
         },
       ),

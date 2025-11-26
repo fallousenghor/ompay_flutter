@@ -9,9 +9,10 @@ class PaiementService {
   PaiementService(this._httpService);
 
   // Scanner un QR Code
-  Future<ApiResponse<ScannerQrResponse>> scannerQRCode(String donneesQR) async {
+  Future<ApiResponse<ScannerQrResponse>> scannerQRCode(
+      String donneesQR, String numeroCompte) async {
     final response = await _httpService.post<Map<String, dynamic>>(
-      '/paiements/scanner-qr',
+      '/$numeroCompte/paiement/scanner-qr',
       {'donneesQR': donneesQR},
       requiresAuth: true,
     );
@@ -30,24 +31,36 @@ class PaiementService {
   }
 
   // Saisir un code de paiement
-  Future<ApiResponse<SaisirCodeResponse>> saisirCodePaiement(
-      String code) async {
+  Future<ApiResponse<Map<String, dynamic>>> saisirCodePaiement(
+      String code, double montant, String numeroCompte) async {
     final response = await _httpService.post<Map<String, dynamic>>(
-      '/paiements/saisir-code',
-      {'code': code},
+      '/$numeroCompte/paiement/saisir-code',
+      {'code': code, 'montant': montant},
       requiresAuth: true,
+      fullResponse: true,
     );
 
-    if (response.success && response.data != null) {
-      return ApiResponse<SaisirCodeResponse>(
-        success: true,
-        data: SaisirCodeResponse.fromJson(response.data!),
-      );
-    }
+    return ApiResponse<Map<String, dynamic>>(
+      success: response.success,
+      message: response.message,
+      data: response.data?['data'] as Map<String, dynamic>?,
+    );
+  }
 
-    return ApiResponse<SaisirCodeResponse>(
-      success: false,
-      message: response.message ?? 'Erreur lors de la saisie du code',
+  // Saisir un numéro de téléphone pour paiement
+  Future<ApiResponse<Map<String, dynamic>>> saisirNumeroTelephone(
+      String numeroTelephone, double montant, String numeroCompte) async {
+    final response = await _httpService.post<Map<String, dynamic>>(
+      '/$numeroCompte/paiement/saisir-numero-telephone',
+      {'numeroTelephone': numeroTelephone, 'montant': montant},
+      requiresAuth: true,
+      fullResponse: true,
+    );
+
+    return ApiResponse<Map<String, dynamic>>(
+      success: response.success,
+      message: response.message,
+      data: response.data?['data'] as Map<String, dynamic>?,
     );
   }
 
@@ -75,9 +88,9 @@ class PaiementService {
 
   // Confirmer un paiement
   Future<ApiResponse<ConfirmerPaiementResponse>> confirmerPaiement(
-      String idPaiement, String codePin) async {
+      String idPaiement, String codePin, String numeroCompte) async {
     final response = await _httpService.post<Map<String, dynamic>>(
-      '/paiements/confirmer/$idPaiement',
+      '/$numeroCompte/paiement/$idPaiement/confirmer',
       {'codePin': codePin},
       requiresAuth: true,
     );
@@ -97,10 +110,9 @@ class PaiementService {
 
   // Annuler un paiement
   Future<ApiResponse<Map<String, dynamic>>> annulerPaiement(
-      String idPaiement) async {
-    final response = await _httpService.post<Map<String, dynamic>>(
-      '/paiements/annuler/$idPaiement',
-      {},
+      String idPaiement, String numeroCompte) async {
+    final response = await _httpService.delete<Map<String, dynamic>>(
+      '/$numeroCompte/paiement/$idPaiement',
       requiresAuth: true,
     );
 

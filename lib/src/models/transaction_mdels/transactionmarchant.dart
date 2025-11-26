@@ -10,8 +10,8 @@ class TransactionMerchant {
 
   factory TransactionMerchant.fromJson(Map<String, dynamic> json) {
     return TransactionMerchant(
-      nom: json['nom'] as String,
-      categorie: json['categorie'] as String,
+      nom: json['nom'] as String? ?? '',
+      categorie: json['categorie'] as String? ?? '',
     );
   }
 

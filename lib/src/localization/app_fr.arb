@@ -20,6 +20,7 @@
   ,"version": "OMPAY Version - 1.1.0(35)"
   ,"payer": "Payer"
   ,"inputMerchant": "Saisir le numéro/code marchand"
+  ,"inputRecipient": "Saisir le numéro du destinataire"
   ,"inputAmount": "Saisir le montant"
   ,"validate": "Valider"
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_app/src/providers/service_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_app/src/models/transaction_mdels/transaction_models.dart';
+import 'package:flutter_app/src/services/services.dart';
+import 'package:flutter_app/src/views/login/code_pin/pin_page.dart';
 
 import 'widgets/accueil_header.dart';
 import 'package:flutter_app/src/views/dashboard/dashboard_drawer.dart';
@@ -60,8 +62,10 @@ class _OrangeMoneyHomePageState extends State<OrangeMoneyHomePage> {
                     ),
                     const SizedBox(height: 12),
                     AccueilForm(
+                      selectedTab: _selectedTab,
                       numeroController: _numeroController,
                       montantController: _montantController,
+                      onValidate: _onValidate,
                     ),
                     const SizedBox(height: 18),
                     const AccueilMaxItSection(),
@@ -75,6 +79,120 @@ class _OrangeMoneyHomePageState extends State<OrangeMoneyHomePage> {
         ),
       ),
     );
+  }
+
+  void _onValidate() async {
+    final numero = _numeroController.text.trim();
+    final montantText = _montantController.text.trim();
+
+    if (numero.isEmpty || montantText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Veuillez remplir tous les champs')),
+      );
+      return;
+    }
+
+    final montant = double.tryParse(montantText);
+    if (montant == null || montant <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Montant invalide')),
+      );
+      return;
+    }
+
+    final serviceProvider =
+        Provider.of<ServiceProvider>(context, listen: false);
+
+    try {
+      if (_selectedTab == 0) {
+        // Payment - détecter automatiquement le type d'entrée
+        final numeroCompte = serviceProvider.currentUser!.numeroTelephone;
+
+        // Détecter si c'est un numéro de téléphone (commence par +221 ou 7) ou un code marchand
+        bool isPhoneNumber =
+            numero.startsWith('+221') || numero.startsWith('7');
+
+        ApiResponse<Map<String, dynamic>> response;
+        if (isPhoneNumber) {
+          // Paiement par numéro de téléphone
+          response = await serviceProvider.paiementService
+              .saisirNumeroTelephone(numero, montant, numeroCompte);
+        } else {
+          // Paiement par code marchand
+          response = await serviceProvider.paiementService
+              .saisirCodePaiement(numero, montant, numeroCompte);
+        }
+
+        if (response.success && response.data != null) {
+          // Navigate to PIN confirmation page for payment
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PinCodeEntryPage(
+                isFirstLogin: false,
+                phoneNumber: numeroCompte,
+                operationType: 'paiement',
+                operationId: response.data!['idPaiement'] as String,
+              ),
+            ),
+          );
+          if (result == true) {
+            _numeroController.clear();
+            _montantController.clear();
+            serviceProvider.fetchBalance();
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erreur: ${response.message}')),
+          );
+        }
+      } else {
+        // Transfer
+        final numeroCompte = serviceProvider.currentUser?.numeroTelephone;
+        if (numeroCompte == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Erreur: Utilisateur non connecté')),
+          );
+          return;
+        }
+        final request = InitiateTransfertRequest(
+          telephoneDestinataire: numero,
+          montant: montant,
+        );
+        final response = await serviceProvider.transfertService
+            .initierTransfert(numeroCompte, request);
+        print(
+            'Transfer response: success=${response.success}, message=${response.message}, data=${response.data}');
+        if (response.success) {
+          print('Transfer initiated: ${response.data!.idTransfert}');
+          // Navigate to PIN confirmation page
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PinCodeEntryPage(
+                isFirstLogin: false,
+                phoneNumber: numeroCompte,
+                operationType: 'transfert',
+                operationId: response.data!.idTransfert,
+              ),
+            ),
+          );
+          if (result == true) {
+            _numeroController.clear();
+            _montantController.clear();
+            serviceProvider.fetchBalance();
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erreur: ${response.message}')),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur: $e')),
+      );
+    }
   }
 
   @override

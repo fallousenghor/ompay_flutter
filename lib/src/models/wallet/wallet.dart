@@ -16,9 +16,11 @@ class Wallet {
 
   factory Wallet.fromJson(Map<String, dynamic> json) {
     return Wallet(
-      id: json['id'] as String,
-      idUtilisateur: json['id_utilisateur'] as String,
-      solde: (json['solde'] as num).toDouble(),
+      id: json['id'] as String? ?? '',
+      idUtilisateur: json['id_utilisateur'] as String? ?? '',
+      solde: json['solde'] is String
+          ? double.parse(json['solde'] as String)
+          : (json['solde'] as num).toDouble(),
       devise: json['devise'] as String,
       derniereMiseAJour: json['derniere_mise_a_jour'] != null
           ? DateTime.parse(json['derniere_mise_a_jour'] as String)

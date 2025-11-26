@@ -70,9 +70,15 @@ class InitierTransfertResponse {
     return InitierTransfertResponse(
       idTransfert: json['idTransfert'] as String,
       statut: json['statut'] as String,
-      montant: (json['montant'] as num).toDouble(),
-      frais: (json['frais'] as num).toDouble(),
-      montantTotal: (json['montantTotal'] as num).toDouble(),
+      montant: json['montant'] is String
+          ? double.parse(json['montant'] as String)
+          : (json['montant'] as num).toDouble(),
+      frais: json['frais'] is String
+          ? double.parse(json['frais'] as String)
+          : (json['frais'] as num).toDouble(),
+      montantTotal: json['montantTotal'] is String
+          ? double.parse(json['montantTotal'] as String)
+          : (json['montantTotal'] as num).toDouble(),
       destinataire: DestinataireInfo.fromJson(
           json['destinataire'] as Map<String, dynamic>),
       dateExpiration: json['dateExpiration'] as String?,

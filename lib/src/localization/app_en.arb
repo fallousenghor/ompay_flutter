@@ -20,6 +20,7 @@
   "version": "OMPAY Version - 1.1.0(35)",
   "payer": "Pay",
   "inputMerchant": "Enter merchant number/code",
+  "inputRecipient": "Enter recipient number",
   "inputAmount": "Enter amount",
   "validate": "Submit"
 }

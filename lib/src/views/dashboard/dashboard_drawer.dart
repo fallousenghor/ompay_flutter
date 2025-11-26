@@ -3,11 +3,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/src/localization/locale_provider.dart';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_app/src/localization/locale_provider.dart';
 import 'package:flutter_app/src/providers/service_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class DashboardDrawer extends StatelessWidget {
   const DashboardDrawer({super.key});
@@ -104,7 +101,12 @@ class DashboardDrawer extends StatelessWidget {
                   const Icon(Icons.power_settings_new, color: Colors.white),
               title: Text(AppLocalizations.of(context)!.logout,
                   style: const TextStyle(color: Colors.white)),
-              onTap: () {},
+              onTap: () async {
+                await serviceProvider.clearAuthToken();
+                if (context.mounted) {
+                  context.go('/');
+                }
+              },
             ),
             const Spacer(),
             Padding(

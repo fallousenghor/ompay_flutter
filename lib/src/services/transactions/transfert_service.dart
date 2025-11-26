@@ -10,9 +10,9 @@ class TransfertService {
 
   // 3.1 Vérifier un Destinataire
   Future<ApiResponse<VerifierDestinataireResponse>> verifierDestinataire(
-      String numeroTelephone) async {
+      String numeroCompte, String numeroTelephone) async {
     final response = await _httpService.get<Map<String, dynamic>>(
-      '/transferts/verifier-destinataire/$numeroTelephone',
+      '/$numeroCompte/transfert/verifier-destinataire/$numeroTelephone',
       requiresAuth: true,
     );
 
@@ -32,11 +32,12 @@ class TransfertService {
 
   // 3.2 Initier un Transfert
   Future<ApiResponse<InitierTransfertResponse>> initierTransfert(
-      InitiateTransfertRequest request) async {
+      String numeroCompte, InitiateTransfertRequest request) async {
     final response = await _httpService.post<Map<String, dynamic>>(
-      '/transferts/initier',
+      '/$numeroCompte/transfert/initier',
       request.toJson(),
       requiresAuth: true,
+      fromJson: (m) => m,
     );
 
     if (response.success && response.data != null) {
@@ -54,9 +55,9 @@ class TransfertService {
 
   // 3.3 Confirmer un Transfert
   Future<ApiResponse<ConfirmerTransfertResponse>> confirmerTransfert(
-      String idTransfert, String codePin) async {
+      String numeroCompte, String idTransfert, String codePin) async {
     final response = await _httpService.post<Map<String, dynamic>>(
-      '/transferts/confirmer/$idTransfert',
+      '/$numeroCompte/transfert/$idTransfert/confirmer',
       {'codePin': codePin},
       requiresAuth: true,
     );
@@ -77,10 +78,9 @@ class TransfertService {
 
   // 3.4 Annuler un Transfert
   Future<ApiResponse<Map<String, dynamic>>> annulerTransfert(
-      String idTransfert) async {
-    final response = await _httpService.post<Map<String, dynamic>>(
-      '/transferts/annuler/$idTransfert',
-      {},
+      String numeroCompte, String idTransfert) async {
+    final response = await _httpService.delete<Map<String, dynamic>>(
+      '/$numeroCompte/transfert/$idTransfert/annuler',
       requiresAuth: true,
     );
 

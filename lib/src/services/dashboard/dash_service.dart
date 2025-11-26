@@ -9,10 +9,9 @@ class UserService {
 
   UserService(this._httpService);
 
-  Future<ApiResponse<DashboardResponse>> getDashboard(
-      String accountNumber) async {
+  Future<ApiResponse<DashboardResponse>> getDashboard() async {
     return _httpService.get<DashboardResponse>(
-      '/$accountNumber/dashboard',
+      '/dashboard',
       requiresAuth: true,
       fromJson: (data) =>
           DashboardResponse.fromJson(data as Map<String, dynamic>),

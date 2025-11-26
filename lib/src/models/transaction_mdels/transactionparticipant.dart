@@ -10,8 +10,8 @@ class TransactionParticipant {
 
   factory TransactionParticipant.fromJson(Map<String, dynamic> json) {
     return TransactionParticipant(
-      numeroTelephone: json['numeroTelephone'] as String,
-      nom: json['nom'] as String,
+      numeroTelephone: json['numeroTelephone'] as String? ?? '',
+      nom: json['nom'] as String? ?? '',
     );
   }
 

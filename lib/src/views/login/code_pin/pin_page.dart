@@ -8,12 +8,16 @@ class PinCodeEntryPage extends StatefulWidget {
   final bool isFirstLogin;
   final String phoneNumber;
   final String token;
+  final String? operationType; // 'transfert', 'paiement', etc.
+  final String? operationId; // ID du transfert ou paiement à confirmer
 
   const PinCodeEntryPage({
     Key? key,
     required this.isFirstLogin,
     required this.phoneNumber,
     this.token = '',
+    this.operationType,
+    this.operationId,
   }) : super(key: key);
 
   @override
@@ -27,6 +31,8 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
   String? _errorMessage;
 
   Future<void> _authenticateWithPin() async {
+    print(
+        '_authenticateWithPin called with operationType: ${widget.operationType}, pinCode length: ${_pinCode.length}');
     if (_pinCode.length != _pinLength) return;
 
     setState(() {
@@ -38,7 +44,55 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
       final serviceProvider =
           Provider.of<ServiceProvider>(context, listen: false);
 
-      if (widget.isFirstLogin) {
+      if (widget.operationType == 'transfert' && widget.operationId != null) {
+        // Confirmation de transfert
+        final numeroCompte = serviceProvider.currentUser!.numeroTelephone;
+        final result =
+            await serviceProvider.transfertService.confirmerTransfert(
+          numeroCompte,
+          widget.operationId!,
+          _pinCode,
+        );
+
+        if (result.success) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Transfert confirmé avec succès')),
+          );
+          // Do not navigate, let user click "Fermer" to close
+        } else {
+          setState(() {
+            _errorMessage = result.message ?? 'Erreur lors de la confirmation';
+            _pinCode = '';
+          });
+        }
+      } else if (widget.operationType == 'paiement' &&
+          widget.operationId != null) {
+        // Confirmation de paiement
+        final numeroCompte = serviceProvider.currentUser!.numeroTelephone;
+        final result = await serviceProvider.paiementService.confirmerPaiement(
+          widget.operationId!,
+          _pinCode,
+          numeroCompte,
+        );
+
+        if (result.success) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Paiement confirmé avec succès')),
+          );
+          // Do not navigate, let user click "Fermer" to close
+        } else {
+          setState(() {
+            _errorMessage = result.message ?? 'Erreur lors de la confirmation';
+            _pinCode = '';
+          });
+        }
+      } else if (widget.isFirstLogin) {
         // Create account using token from OTP verification
         final result = await serviceProvider.authService.createAccount(
           CreateAccountRequest(
@@ -97,7 +151,7 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
         } else {
           setState(() {
             _errorMessage = result.message ?? 'Code PIN incorrect';
-            _pinCode = ''; // Reset PIN on error
+            _pinCode = '';
           });
         }
       }
@@ -114,7 +168,16 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
   }
 
   void _navigateToHome() {
-    context.go('/home');
+    print('_navigateToHome called with operationType: ${widget.operationType}');
+    // Pour les opérations, revenir à la page précédente (accueil)
+    // Pour les connexions, aller à l'accueil
+    if (widget.operationType != null) {
+      print('Popping to previous page');
+      Navigator.of(context).pop();
+    } else {
+      print('Going to /home');
+      context.go('/home');
+    }
   }
 
   void _onNumberPressed(String number) {
@@ -123,7 +186,8 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
         _pinCode += number;
       });
 
-      if (_pinCode.length == _pinLength) {
+      // Auto-confirm only for login/first login, not for operations
+      if (_pinCode.length == _pinLength && widget.operationType == null) {
         Future.delayed(const Duration(milliseconds: 200), _authenticateWithPin);
       }
     }
@@ -168,122 +232,165 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
           ),
           // Carte PIN centrée
           Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
-              padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 18),
-              decoration: BoxDecoration(
-                color: const Color(0xFF23232B),
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.18),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Logos centrés
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/images/logor.png',
-                        width: 120,
-                        height: 120,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    "SMS d'authentification vérifié !",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
+            child: SingleChildScrollView(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF23232B),
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.18),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    widget.isFirstLogin
-                        ? 'Veuillez créer votre code secret Orange Money !'
-                        : 'Veuillez saisir votre code secret Orange Money !',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.white70,
-                      height: 1.4,
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Logos centrés
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/images/logor.png',
+                          width: 80,
+                          height: 80,
+                        ),
+                      ],
                     ),
-                  ),
-                  if (_errorMessage != null) ...[
                     const SizedBox(height: 12),
                     Text(
-                      _errorMessage!,
+                      widget.operationType == 'transfert'
+                          ? "Confirmation de transfert"
+                          : widget.operationType == 'paiement'
+                              ? "Confirmation de paiement"
+                              : "SMS d'authentification vérifié !",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.operationType == 'transfert'
+                          ? 'Veuillez saisir votre code PIN pour confirmer le transfert'
+                          : widget.operationType == 'paiement'
+                              ? 'Veuillez saisir votre code PIN pour confirmer le paiement'
+                              : widget.isFirstLogin
+                                  ? 'Veuillez créer votre code secret Orange Money !'
+                                  : 'Veuillez saisir votre code secret Orange Money !',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.redAccent,
-                        height: 1.3,
+                        fontSize: 13,
+                        color: Colors.white70,
+                        height: 1.4,
+                      ),
+                    ),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.redAccent,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 18),
+                    // Indicateurs de code PIN
+                    _isLoading
+                        ? const SizedBox(
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(_pinLength, (index) {
+                              return Container(
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 7),
+                                width: 16,
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: index < _pinCode.length
+                                      ? Colors.white
+                                      : Colors.white.withOpacity(0.25),
+                                ),
+                              );
+                            }),
+                          ),
+                    const SizedBox(height: 16),
+                    // Clavier numérique custom
+                    _buildPinKeyboard(),
+                    const SizedBox(height: 12),
+                    // Bouton Confirmer (seulement pour les opérations)
+                    if (widget.operationType != null) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF6B00),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: _pinCode.length == _pinLength
+                              ? () {
+                                  print('Confirmer button pressed');
+                                  _authenticateWithPin();
+                                }
+                              : null,
+                          child: const Text(
+                            'Confirmer',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    // Bouton Fermer
+                    SizedBox(
+                      width: double.infinity,
+                      height: 46,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(
+                              color: Colors.white.withOpacity(0.5), width: 1.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          backgroundColor: Colors.transparent,
+                        ),
+                        onPressed: () => Navigator.pop(
+                            context, widget.operationType != null),
+                        child: const Text(
+                          'Fermer',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.white70,
+                          ),
+                        ),
                       ),
                     ),
                   ],
-                  const SizedBox(height: 18),
-                  // Indicateurs de code PIN
-                  _isLoading
-                      ? const SizedBox(
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(_pinLength, (index) {
-                            return Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 7),
-                              width: 16,
-                              height: 16,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: index < _pinCode.length
-                                    ? Colors.white
-                                    : Colors.white.withOpacity(0.25),
-                              ),
-                            );
-                          }),
-                        ),
-                  const SizedBox(height: 22),
-                  // Clavier numérique custom
-                  _buildPinKeyboard(),
-                  const SizedBox(height: 18),
-                  // Bouton Fermer
-                  SizedBox(
-                    width: double.infinity,
-                    height: 46,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                            color: Colors.white.withOpacity(0.5), width: 1.5),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        backgroundColor: Colors.transparent,
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        'Fermer',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

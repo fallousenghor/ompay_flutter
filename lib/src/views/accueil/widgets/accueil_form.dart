@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class AccueilForm extends StatelessWidget {
+  final int selectedTab;
   final TextEditingController numeroController;
   final TextEditingController montantController;
+  final VoidCallback? onValidate;
   const AccueilForm(
       {super.key,
+      required this.selectedTab,
       required this.numeroController,
-      required this.montantController});
+      required this.montantController,
+      this.onValidate});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +39,9 @@ class AccueilForm extends StatelessWidget {
                   children: [
                     _buildTextField(
                       controller: numeroController,
-                      hint: AppLocalizations.of(context)!.inputMerchant,
+                      hint: selectedTab == 0
+                          ? AppLocalizations.of(context)!.inputMerchant
+                          : AppLocalizations.of(context)!.inputRecipient,
                     ),
                     const SizedBox(height: 10),
                     _buildTextField(
@@ -62,7 +68,7 @@ class AccueilForm extends StatelessWidget {
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: onValidate,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF6B00),
                 foregroundColor: Colors.white,

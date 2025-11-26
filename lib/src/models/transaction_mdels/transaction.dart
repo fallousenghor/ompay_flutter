@@ -35,12 +35,14 @@ class Transaction {
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
-      id: json['idTransaction'] as String,
-      type: json['type'] as String,
-      montant: json['montant'] as String,
-      montantNumerique: (json['montantNumerique'] as num).toDouble(),
-      devise: json['devise'] as String,
-      typeOperation: json['typeOperation'] as String,
+      id: json['id'] as String? ?? '',
+      type: json['type'] as String? ?? '',
+      montant: json['montant'] as String? ?? '',
+      montantNumerique: json['montantNumerique'] is String
+          ? double.tryParse(json['montantNumerique'] as String) ?? 0.0
+          : (json['montantNumerique'] as num?)?.toDouble() ?? 0.0,
+      devise: json['devise'] as String? ?? '',
+      typeOperation: json['typeOperation'] as String? ?? '',
       expediteur: json['expediteur'] != null
           ? TransactionParticipant.fromJson(
               json['expediteur'] as Map<String, dynamic>)
@@ -53,10 +55,14 @@ class Transaction {
           ? TransactionMerchant.fromJson(
               json['marchand'] as Map<String, dynamic>)
           : null,
-      statut: json['statut'] as String,
-      dateTransaction: DateTime.parse(json['dateTransaction'] as String),
-      reference: json['reference'] as String,
-      frais: (json['frais'] as num).toDouble(),
+      statut: json['statut'] as String? ?? '',
+      dateTransaction: json['dateTransaction'] != null
+          ? DateTime.parse(json['dateTransaction'] as String)
+          : DateTime.now(),
+      reference: json['reference'] as String? ?? '',
+      frais: json['frais'] is String
+          ? double.tryParse(json['frais'] as String) ?? 0.0
+          : (json['frais'] as num?)?.toDouble() ?? 0.0,
     );
   }
 

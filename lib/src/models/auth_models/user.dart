@@ -26,20 +26,28 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['idUtilisateur'] as String,
-      numeroTelephone: json['numeroTelephone'] as String,
+      id: json['id'] as String? ?? json['idUtilisateur'] as String? ?? '',
+      numeroTelephone: json['numeroTelephone'] as String? ??
+          json['numero_telephone'] as String? ??
+          '',
       prenom: json['prenom'] as String?,
       nom: json['nom'] as String?,
       email: json['email'] as String?,
-      numeroCni: json['numeroCNI'] as String?,
-      statutKyc: json['statutKYC'] as String?,
-      biometrieActivee: json['biometrieActivee'] as bool? ?? false,
+      numeroCni: json['numeroCNI'] as String? ?? json['numero_cni'] as String?,
+      statutKyc: json['statutKYC'] as String? ?? json['statut_kyc'] as String?,
+      biometrieActivee: json['biometrieActivee'] as bool? ??
+          json['biometrie_activee'] as bool? ??
+          false,
       dateCreation: json['dateCreation'] != null
           ? DateTime.parse(json['dateCreation'] as String)
-          : null,
+          : json['date_creation'] != null
+              ? DateTime.parse(json['date_creation'] as String)
+              : null,
       derniereConnexion: json['derniereConnexion'] != null
           ? DateTime.parse(json['derniereConnexion'] as String)
-          : null,
+          : json['derniere_connexion'] != null
+              ? DateTime.parse(json['derniere_connexion'] as String)
+              : null,
     );
   }
 
