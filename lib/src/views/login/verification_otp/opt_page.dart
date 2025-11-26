@@ -40,7 +40,7 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
         final state = GoRouterState.of(context);
         extra = state.extra as Map<String, dynamic>?;
       } catch (e) {
-        debugPrint('GoRouterState.of failed: $e');
+        // GoRouterState.of failed
       }
 
       if (extra == null) {
@@ -57,9 +57,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
         _phoneNumber = widget.phoneNumber;
         _token = widget.token;
       }
-
-      debugPrint(
-          'OTP Page initialized: phone=$_phoneNumber, token=${_token.isNotEmpty ? "present" : "empty"}');
 
       // Validate required data
       if (_phoneNumber.isEmpty) {
@@ -85,7 +82,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
     try {
       // Prevent concurrent verify requests
       if (_isVerifying) {
-        debugPrint('verifyOtp: already verifying, aborting duplicate call');
         return;
       }
       _isVerifying = true;
@@ -103,8 +99,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
         }
       }
 
-      debugPrint('Requesting OTP token for $normalizedPhone');
-
       final result = await serviceProvider.authService.initiateLogin(
         InitiateLoginRequest(numeroTelephone: normalizedPhone),
       );
@@ -116,10 +110,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
             setState(() {
               _token = received;
             });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Code OTP envoyé')),
-            );
-            debugPrint('requestToken: token=$received');
           }
         } else {
           if (mounted) {
@@ -127,8 +117,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
               _errorMessage = result.message ?? 'Aucun token reçu du serveur';
             });
           }
-          debugPrint(
-              'requestToken: success but token empty, result=${result.message}');
         }
       } else {
         if (mounted) {
@@ -137,7 +125,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                 result.message ?? 'Erreur lors de la demande du code OTP';
           });
         }
-        debugPrint('requestToken failed: ${result.message}');
       }
     } catch (e) {
       if (!mounted) return;
@@ -206,67 +193,30 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       final serviceProvider =
           Provider.of<ServiceProvider>(context, listen: false);
 
-      debugPrint('verifyOtp request -> token=$_token, code=$otp');
       final result = await serviceProvider.authService.verifyOtp(
         VerifyOtpRequest(token: _token, code: otp),
       );
-      debugPrint(
-          'verifyOtp result -> success=${result.success}, message=${result.message}, data=${result.data}');
 
       if (result.success && result.data != null) {
         final response = result.data!;
 
-        // Debug: log verification response status and phone/token
-        debugPrint(
-            'verifyOtp: status=${response.status}, phone=$_phoneNumber, token=$_token');
+        // Verify OTP response
 
         final bool isFirstLogin = response.status == 'user_created' ||
             response.status == 'user_linked';
         if (!mounted) return;
-        debugPrint(
-            'Navigating to /pin (isFirstLogin=$isFirstLogin) with phone=$_phoneNumber');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isFirstLogin
-                ? 'Redirection vers création de PIN...'
-                : 'Redirection vers saisie du PIN...'),
-          ),
-        );
         GoRouter.of(context).go('/pin', extra: {
           'isFirstLogin': isFirstLogin,
           'phoneNumber': _phoneNumber,
           'token': _token,
         });
       } else {
-        // If success but no data, or outright failure, surface more debug info
+        // If success but no data, or outright failure
         final serverMsg = result.message ?? 'Code OTP invalide ou expiré';
-        final raw = result.data != null ? ' | data: ${result.data}' : '';
-        debugPrint(
-            'verifyOtp failed: success=${result.success} message=${result.message} data=${result.data}');
-
-        if (kDebugMode && mounted) {
-          // Show a debug dialog with raw server response to help diagnose
-          showDialog(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Debug verifyOtp'),
-              content: SingleChildScrollView(
-                child: Text(
-                    'success=${result.success}\nmessage=${result.message}\ndata=${result.data}'),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(),
-                  child: const Text('Fermer'),
-                ),
-              ],
-            ),
-          );
-        }
 
         if (mounted) {
           setState(() {
-            _errorMessage = '$serverMsg$raw';
+            _errorMessage = serverMsg;
           });
         }
       }
@@ -299,9 +249,9 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
 
       if (result.success) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Code OTP renvoyé')),
-          );
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   const SnackBar(content: Text('Code OTP renvoyé')),
+          // );
         }
       } else {
         if (!mounted) return;
@@ -345,28 +295,6 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                       ),
                       const SizedBox(height: 12),
                     ],
-                    if (kDebugMode) ...[
-                      TextButton(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Debug token'),
-                              content: Text(
-                                  _token.isNotEmpty ? _token : 'token vide'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(ctx).pop(),
-                                  child: const Text('Fermer'),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                        child: const Text('Afficher token (debug)'),
-                      ),
-                      const SizedBox(height: 8),
-                    ],
                     OTPCard(
                       controllers: _controllers,
                       focusNodes: _focusNodes,
@@ -388,15 +316,11 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
                             if (_isOtpComplete() &&
                                 !_isLoading &&
                                 !_isVerifying) {
-                              debugPrint(
-                                  '🔄 Scheduling auto-verify OTP: ${_getOtpCode()}');
                               Future.delayed(const Duration(milliseconds: 200),
                                   () {
                                 if (!_isLoading &&
                                     !_isVerifying &&
                                     _isOtpComplete()) {
-                                  debugPrint(
-                                      '🔄 Auto-verifying OTP (delayed): ${_getOtpCode()}');
                                   _verifyOtp();
                                 }
                               });

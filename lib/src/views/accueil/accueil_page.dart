@@ -32,6 +32,7 @@ class _OrangeMoneyHomePageState extends State<OrangeMoneyHomePage> {
     final serviceProvider =
         Provider.of<ServiceProvider>(context, listen: false);
     serviceProvider.fetchUserProfile();
+    serviceProvider.fetchDashboard();
   }
 
   @override
@@ -40,42 +41,54 @@ class _OrangeMoneyHomePageState extends State<OrangeMoneyHomePage> {
       backgroundColor: const Color(0xFF18171C),
       drawer: const DashboardDrawer(),
       body: SafeArea(
-        child: Column(
-          children: [
-            Builder(
-              builder: (context) => AccueilHeader(
-                openDrawer: () {
-                  Scaffold.of(context).openDrawer();
-                },
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 8),
-                    AccueilTabs(
-                      selectedTab: _selectedTab,
-                      onTabChanged: (i) => setState(() => _selectedTab = i),
-                    ),
-                    const SizedBox(height: 12),
-                    AccueilForm(
-                      selectedTab: _selectedTab,
-                      numeroController: _numeroController,
-                      montantController: _montantController,
-                      onValidate: _onValidate,
-                    ),
-                    const SizedBox(height: 18),
-                    const AccueilMaxItSection(),
-                    const SizedBox(height: 18),
-                    const AccueilHistorique(),
-                  ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Column(
+              children: [
+                Builder(
+                  builder: (context) => AccueilHeader(
+                    openDrawer: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                  ),
                 ),
-              ),
-            ),
-          ],
+                Expanded(
+                  child: Column(
+                    children: [
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 0, vertical: 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 6),
+                            AccueilTabs(
+                              selectedTab: _selectedTab,
+                              onTabChanged: (i) =>
+                                  setState(() => _selectedTab = i),
+                            ),
+                            const SizedBox(height: 8),
+                            AccueilForm(
+                              selectedTab: _selectedTab,
+                              numeroController: _numeroController,
+                              montantController: _montantController,
+                              onValidate: _onValidate,
+                            ),
+                            const SizedBox(height: 12),
+                            const AccueilMaxItSection(),
+                            const SizedBox(height: 12),
+                          ],
+                        ),
+                      ),
+                      const Expanded(
+                        child: AccueilHistorique(),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -125,6 +138,7 @@ class _OrangeMoneyHomePageState extends State<OrangeMoneyHomePage> {
 
         if (response.success && response.data != null) {
           // Navigate to PIN confirmation page for payment
+          // ignore: use_build_context_synchronously
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
@@ -142,6 +156,7 @@ class _OrangeMoneyHomePageState extends State<OrangeMoneyHomePage> {
             serviceProvider.fetchBalance();
           }
         } else {
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Erreur: ${response.message}')),
           );
@@ -161,11 +176,9 @@ class _OrangeMoneyHomePageState extends State<OrangeMoneyHomePage> {
         );
         final response = await serviceProvider.transfertService
             .initierTransfert(numeroCompte, request);
-        print(
-            'Transfer response: success=${response.success}, message=${response.message}, data=${response.data}');
         if (response.success) {
-          print('Transfer initiated: ${response.data!.idTransfert}');
           // Navigate to PIN confirmation page
+          // ignore: use_build_context_synchronously
           final result = await Navigator.push(
             context,
             MaterialPageRoute(
@@ -183,12 +196,14 @@ class _OrangeMoneyHomePageState extends State<OrangeMoneyHomePage> {
             serviceProvider.fetchBalance();
           }
         } else {
+          // ignore: use_build_context_synchronously
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Erreur: ${response.message}')),
           );
         }
       }
     } catch (e) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur: $e')),
       );
@@ -201,35 +216,4 @@ class _OrangeMoneyHomePageState extends State<OrangeMoneyHomePage> {
     _montantController.dispose();
     super.dispose();
   }
-}
-
-// Simple QR Code painter (simulé)
-class QRCodePainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.fill;
-
-    // Simulation d'un QR code avec des carrés
-    final blockSize = size.width / 10;
-    for (int i = 0; i < 10; i++) {
-      for (int j = 0; j < 10; j++) {
-        if ((i + j) % 2 == 0) {
-          canvas.drawRect(
-            Rect.fromLTWH(
-              i * blockSize,
-              j * blockSize,
-              blockSize * 0.9,
-              blockSize * 0.9,
-            ),
-            paint,
-          );
-        }
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

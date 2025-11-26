@@ -17,7 +17,7 @@ class AccueilForm extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFF23232B),
         borderRadius: BorderRadius.circular(18),
@@ -56,8 +56,8 @@ class AccueilForm extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 child: Image.asset(
                   'assets/images/bgacueil.jpeg',
-                  width: 100,
-                  height: 100,
+                  width: 80,
+                  height: 80,
                   fit: BoxFit.cover,
                 ),
               ),

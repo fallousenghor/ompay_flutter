@@ -1,13 +1,13 @@
-// lib/services/user_service.dart
+// lib/services/dashboard_service.dart
 
 import 'package:flutter_app/src/models/auth_models/user.dart';
 import 'package:flutter_app/src/models/dashboard.dart';
 import 'package:flutter_app/src/services/services.dart';
 
-class UserService {
+class DashboardService {
   final HttpService _httpService;
 
-  UserService(this._httpService);
+  DashboardService(this._httpService);
 
   Future<ApiResponse<DashboardResponse>> getDashboard() async {
     return _httpService.get<DashboardResponse>(

@@ -41,25 +41,18 @@ class _AccueilHistoriqueState extends State<AccueilHistorique> {
         Provider.of<ServiceProvider>(context, listen: false);
     final user = serviceProvider.currentUser;
     if (user != null) {
-      debugPrint('Fetching dashboard for transactions...');
       final response = await serviceProvider.userService.getDashboard();
-      debugPrint(
-          'Dashboard response: success=${response.success}, message=${response.message}');
       if (response.success && response.data != null) {
-        debugPrint(
-            'Transactions received: ${response.data!.transactionsRecentes.length}');
         setState(() {
           _transactions = response.data!.transactionsRecentes;
           _isLoading = false;
         });
       } else {
-        debugPrint('Failed to fetch dashboard: ${response.message}');
         setState(() {
           _isLoading = false;
         });
       }
     } else {
-      debugPrint('No user found for fetching transactions');
       setState(() {
         _isLoading = false;
       });
@@ -77,115 +70,117 @@ class _AccueilHistoriqueState extends State<AccueilHistorique> {
           _fetchTransactions();
         }
 
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
+        return Column(
+          children: [
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
                     'Historique',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.refresh, color: Color(0xFFF97316)),
+                    icon: const Icon(Icons.refresh,
+                        color: Color(0xFFF97316), size: 20),
                     onPressed: _fetchTransactions,
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-
-              // Transactions list
-              if (_isLoading)
-                const Center(child: CircularProgressIndicator())
-              else if (_transactions.isEmpty)
-                const Center(
-                  child: Text(
-                    'Aucune transaction récente',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                )
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _transactions.length,
-                  itemBuilder: (context, index) {
-                    final transaction = _transactions[index];
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1F2937),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          // Icon
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF374151),
-                              borderRadius: BorderRadius.circular(12),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _transactions.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'Aucune transaction récente',
+                              style: TextStyle(color: Colors.white70),
                             ),
-                            child: Icon(
-                              _getTransactionIcon(transaction.type),
-                              color: const Color(0xFF9CA3AF),
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-
-                          // Transaction details
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _getTransactionTitle(transaction),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                          )
+                        : ListView.builder(
+                            itemCount: _transactions.length,
+                            itemBuilder: (context, index) {
+                              final transaction = _transactions[index];
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1F2937),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _formatDate(transaction.dateTransaction),
-                                  style: const TextStyle(
-                                    color: Color(0xFF9CA3AF),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                                padding: const EdgeInsets.all(12),
+                                child: Row(
+                                  children: [
+                                    // Icon
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF374151),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        _getTransactionIcon(transaction.type),
+                                        color: const Color(0xFF9CA3AF),
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
 
-                          // Amount
-                          Text(
-                            '${transaction.montant} FCFA',
-                            style: TextStyle(
-                              color: transaction.typeOperation == 'credit'
-                                  ? const Color(0xFF10B981)
-                                  : Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
+                                    // Transaction details
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            _getTransactionTitle(transaction),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            _formatDate(
+                                                transaction.dateTransaction),
+                                            style: const TextStyle(
+                                              color: Color(0xFF9CA3AF),
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Amount
+                                    Text(
+                                      '${transaction.montant} FCFA',
+                                      style: TextStyle(
+                                        color: transaction.typeOperation ==
+                                                'credit'
+                                            ? const Color(0xFF10B981)
+                                            : Colors.white,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-            ],
-          ),
+              ),
+            ),
+          ],
         );
       },
     );

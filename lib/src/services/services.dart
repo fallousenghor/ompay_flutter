@@ -56,10 +56,8 @@ class HttpService {
 
     if (requiresAuth && _authToken != null) {
       headers['Authorization'] = 'Bearer $_authToken';
-      debugPrint('Authorization header: Bearer $_authToken'); // Log pour debug
     } else if (requiresAuth) {
-      debugPrint(
-          'WARNING: requiresAuth=true but _authToken is null'); // Log d'avertissement
+      // WARNING: requiresAuth=true but _authToken is null
     }
 
     return headers;
@@ -144,8 +142,6 @@ class HttpService {
     T Function(dynamic)? fromJson, {
     bool fullResponse = false,
   }) {
-    debugPrint(
-        'API Response: status=${response.statusCode}, body=${response.body}');
     try {
       final responseData = json.decode(response.body);
       if (responseData is! Map<String, dynamic>) {

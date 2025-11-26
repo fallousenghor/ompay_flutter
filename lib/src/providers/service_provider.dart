@@ -2,11 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_app/src/services/auth/auth_service.dart';
-import 'package:flutter_app/src/services/auth/user_service.dart';
+import 'package:flutter_app/src/services/auth/user_service.dart'
+    as auth_service;
+import 'package:flutter_app/src/services/dashboard/dash_service.dart';
 import 'package:flutter_app/src/services/services.dart';
 import 'package:flutter_app/src/services/transactions/paiment_service.dart';
 import 'package:flutter_app/src/services/transactions/transfert_service.dart';
 import 'package:flutter_app/src/services/wallet/walet_serice.dart';
+import 'package:flutter_app/src/models/dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -15,13 +18,15 @@ import 'package:flutter_app/src/models/auth_models/user.dart';
 class ServiceProvider with ChangeNotifier {
   late final HttpService _httpService;
   late final AuthService _authService;
-  late final UserService _userService;
+  late final auth_service.UserService _userService;
+  late final DashboardService _dashboardService;
   late final WalletService _walletService;
   late final TransfertService _transfertService;
   late final PaiementService _paiementService;
 
   User? _currentUser;
   double? _currentBalance;
+  DashboardResponse? _dashboard;
 
   // Constructor
   ServiceProvider() {
@@ -32,7 +37,8 @@ class ServiceProvider with ChangeNotifier {
   void _initializeServices() {
     _httpService = HttpService();
     _authService = AuthService(_httpService);
-    _userService = UserService(_httpService);
+    _userService = auth_service.UserService(_httpService);
+    _dashboardService = DashboardService(_httpService);
     _walletService = WalletService(_httpService);
     _transfertService = TransfertService(_httpService);
     _paiementService = PaiementService(_httpService);
@@ -41,48 +47,45 @@ class ServiceProvider with ChangeNotifier {
   // Getters for services
   HttpService get httpService => _httpService;
   AuthService get authService => _authService;
-  UserService get userService => _userService;
+  auth_service.UserService get userService => _userService;
+  DashboardService get dashboardService => _dashboardService;
   WalletService get walletService => _walletService;
   TransfertService get transfertService => _transfertService;
   PaiementService get paiementService => _paiementService;
 
   User? get currentUser => _currentUser;
   double? get currentBalance => _currentBalance;
+  DashboardResponse? get dashboard => _dashboard;
 
   Future<void> fetchUserProfile() async {
-    debugPrint('Fetching user profile...');
     final response = await _userService.getUserProfile();
-    debugPrint(
-        'Profile response: success=${response.success}, data=${response.data}');
     if (response.success && response.data != null) {
       _currentUser = response.data!;
       _saveUserToStorage(_currentUser!);
-      debugPrint(
-          'User profile loaded: ${_currentUser!.nomComplet} (${_currentUser!.numeroTelephone})');
 
       // Charger le solde après le profil
       await fetchBalance();
 
       notifyListeners();
-    } else {
-      debugPrint('Failed to load user profile: ${response.message}');
     }
   }
 
   Future<void> fetchBalance() async {
     if (_currentUser == null) return;
 
-    debugPrint('Fetching balance for user: ${_currentUser!.numeroTelephone}');
     final response =
         await _walletService.getBalance(_currentUser!.numeroTelephone);
-    debugPrint(
-        'Balance response: success=${response.success}, data=${response.data}');
     if (response.success && response.data != null) {
       _currentBalance = response.data!;
       _saveBalanceToStorage(_currentBalance!);
-      debugPrint('Balance loaded: $_currentBalance');
-    } else {
-      debugPrint('Failed to load balance: ${response.message}');
+    }
+  }
+
+  Future<void> fetchDashboard() async {
+    final response = await _dashboardService.getDashboard();
+    if (response.success && response.data != null) {
+      _dashboard = response.data!;
+      notifyListeners();
     }
   }
 

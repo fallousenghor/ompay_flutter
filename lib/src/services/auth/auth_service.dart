@@ -62,9 +62,7 @@ class AuthService {
       }
     }
 
-    // Debug output to help diagnostics: show what the server actually returned
-    debugPrint(
-        'verifyOtp response: success=${response.success} message=${response.message} data=${response.data}');
+    // Verify OTP response
 
     return ApiResponse<VerifyOtpResponse>(
       success: false,
@@ -85,8 +83,6 @@ class AuthService {
         response.data is Map<String, dynamic>) {
       final dataMap = response.data as Map<String, dynamic>;
 
-      debugPrint('login response data: $dataMap');
-
       // Try to retrieve token from known keys flexibly
       String? token = dataMap['token'] as String?; // Access token for auth
       if (token == null || token.isEmpty) {
@@ -97,12 +93,10 @@ class AuthService {
       final loginResponse = LoginResponse.fromJson(dataMap);
 
       if (token == null || token.isEmpty) {
-        debugPrint(
-            'Warning: Login successful but sessionToken is null or empty.');
+        // Warning: Login successful but sessionToken is null or empty
       } else {
         // Sauvegarder le token d'authentification
         _httpService.setAuthToken(token);
-        debugPrint('Token set in HttpService: $token');
       }
 
       return ApiResponse<LoginResponse>(
@@ -110,8 +104,7 @@ class AuthService {
         data: loginResponse,
       );
     } else if (response.success && response.message == "connexion reussie") {
-      debugPrint(
-          'Warning: Login successful but no data returned, no sessionToken available.');
+      // Warning: Login successful but no data returned, no sessionToken available
       return ApiResponse<LoginResponse>(
         success: true,
         data: null,

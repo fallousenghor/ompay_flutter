@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_app/src/providers/service_provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class AccueilHeader extends StatefulWidget {
   final VoidCallback? openDrawer;
@@ -25,6 +26,7 @@ class _AccueilHeaderState extends State<AccueilHeader> {
     final serviceProvider = Provider.of<ServiceProvider>(context);
     final user = serviceProvider.currentUser;
     final balance = serviceProvider.currentBalance;
+    final dashboard = serviceProvider.dashboard;
 
     final String fullName = user != null
         ? (user.nomComplet.isNotEmpty
@@ -43,16 +45,16 @@ class _AccueilHeaderState extends State<AccueilHeader> {
           Stack(
             children: [
               Container(
-                margin: const EdgeInsets.only(top: 24, left: 16, right: 16),
-                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(top: 16, left: 16, right: 16),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: const Color(0xFF23232B),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.12),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 3),
                     ),
                   ],
                 ),
@@ -68,21 +70,27 @@ class _AccueilHeaderState extends State<AccueilHeader> {
                         ),
                         const Spacer(),
                         Container(
-                          width: 70,
-                          height: 70,
+                          width: 80,
+                          height: 80,
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white, width: 3),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white, width: 2),
                           ),
-                          child: const Center(
-                            child: Icon(Icons.qr_code,
-                                size: 48, color: Color(0xFF23232B)),
+                          child: Center(
+                            child: dashboard?.qrCode != null
+                                ? QrImageView(
+                                    data: dashboard!.qrCode!.donnees,
+                                    size: 65.0,
+                                    foregroundColor: const Color(0xFF23232B),
+                                  )
+                                : const Icon(Icons.qr_code,
+                                    size: 65, color: Color(0xFF23232B)),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         Expanded(
@@ -94,7 +102,7 @@ class _AccueilHeaderState extends State<AccueilHeader> {
                                       '${AppLocalizations.of(context)!.welcome} ',
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
@@ -102,7 +110,7 @@ class _AccueilHeaderState extends State<AccueilHeader> {
                                   text: fullName,
                                   style: const TextStyle(
                                     color: Color(0xFFFFB800),
-                                    fontSize: 18,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -114,24 +122,24 @@ class _AccueilHeaderState extends State<AccueilHeader> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
                         Text(
                           displayBalance,
                           style: const TextStyle(
                             color: Color(0xFFFFB800),
-                            fontSize: 22,
+                            fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
+                            letterSpacing: 1.5,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 4),
                         const Text(
                           'FCFA',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
+                            fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
                         ),

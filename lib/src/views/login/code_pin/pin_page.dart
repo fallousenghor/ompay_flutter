@@ -31,8 +31,6 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
   String? _errorMessage;
 
   Future<void> _authenticateWithPin() async {
-    print(
-        '_authenticateWithPin called with operationType: ${widget.operationType}, pinCode length: ${_pinCode.length}');
     if (_pinCode.length != _pinLength) return;
 
     setState(() {
@@ -106,10 +104,6 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
           // If server returned a session token, store it.
           if (result.data != null && result.data!.sessionToken.isNotEmpty) {
             serviceProvider.setAuthToken(result.data!.sessionToken);
-            debugPrint(
-                'PIN createAccount succeeded, sessionToken=${result.data!.sessionToken}');
-          } else {
-            debugPrint('createAccount succeeded but no sessionToken provided');
           }
           // Navigate to home even if server didn't return a session token
           // (server may use another auth mechanism). This mirrors server
@@ -139,10 +133,6 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
             if (result.data!.user != null) {
               serviceProvider.setCurrentUser(result.data!.user!);
             }
-            debugPrint(
-                'PIN login succeeded, sessionToken=${result.data!.sessionToken}');
-          } else {
-            debugPrint('login succeeded but no sessionToken provided');
           }
           setState(() {
             _isLoading = false;
@@ -168,14 +158,11 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
   }
 
   void _navigateToHome() {
-    print('_navigateToHome called with operationType: ${widget.operationType}');
     // Pour les opérations, revenir à la page précédente (accueil)
     // Pour les connexions, aller à l'accueil
     if (widget.operationType != null) {
-      print('Popping to previous page');
       Navigator.of(context).pop();
     } else {
-      print('Going to /home');
       context.go('/home');
     }
   }
@@ -211,191 +198,196 @@ class _PinCodeEntryPageState extends State<PinCodeEntryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          // Image de fond
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/bg.jpeg'),
-                fit: BoxFit.cover,
+      body: LayoutBuilder(builder: (context, constraints) {
+        return Stack(
+          children: [
+            // Image de fond
+            Container(
+              width: double.infinity,
+              height: double.infinity,
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/bg.jpeg'),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
-          // Overlay foncé
-          const SizedBox(
-            width: double.infinity,
-            height: double.infinity,
-            // color: Colors.black.withOpacity(0.55),
-          ),
-          // Carte PIN centrée
-          Center(
-            child: SingleChildScrollView(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF23232B),
-                  borderRadius: BorderRadius.circular(32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.18),
-                      blurRadius: 24,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Logos centrés
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          'assets/images/logor.png',
-                          width: 80,
-                          height: 80,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      widget.operationType == 'transfert'
-                          ? "Confirmation de transfert"
-                          : widget.operationType == 'paiement'
-                              ? "Confirmation de paiement"
-                              : "SMS d'authentification vérifié !",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.operationType == 'transfert'
-                          ? 'Veuillez saisir votre code PIN pour confirmer le transfert'
-                          : widget.operationType == 'paiement'
-                              ? 'Veuillez saisir votre code PIN pour confirmer le paiement'
-                              : widget.isFirstLogin
-                                  ? 'Veuillez créer votre code secret Orange Money !'
-                                  : 'Veuillez saisir votre code secret Orange Money !',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.white70,
-                        height: 1.4,
-                      ),
-                    ),
-                    if (_errorMessage != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        _errorMessage!,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.redAccent,
-                          height: 1.3,
-                        ),
+            // Overlay foncé
+            const SizedBox(
+              width: double.infinity,
+              height: double.infinity,
+              // color: Colors.black.withOpacity(0.55),
+            ),
+            // Carte PIN centrée
+            Center(
+              child: SingleChildScrollView(
+                child: Container(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  constraints: BoxConstraints(
+                    maxWidth: 400, // Limite la largeur maximale
+                    minHeight: constraints.maxHeight * 0.6, // Hauteur minimale
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF23232B),
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.18),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
                       ),
                     ],
-                    const SizedBox(height: 18),
-                    // Indicateurs de code PIN
-                    _isLoading
-                        ? const SizedBox(
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(_pinLength, (index) {
-                              return Container(
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 7),
-                                width: 16,
-                                height: 16,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: index < _pinCode.length
-                                      ? Colors.white
-                                      : Colors.white.withOpacity(0.25),
-                                ),
-                              );
-                            }),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Logos centrés
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/images/logor.png',
+                            width: 80,
+                            height: 80,
                           ),
-                    const SizedBox(height: 16),
-                    // Clavier numérique custom
-                    _buildPinKeyboard(),
-                    const SizedBox(height: 12),
-                    // Bouton Confirmer (seulement pour les opérations)
-                    if (widget.operationType != null) ...[
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        widget.operationType == 'transfert'
+                            ? "Confirmation de transfert"
+                            : widget.operationType == 'paiement'
+                                ? "Confirmation de paiement"
+                                : "SMS d'authentification vérifié !",
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.operationType == 'transfert'
+                            ? 'Veuillez saisir votre code PIN pour confirmer le transfert'
+                            : widget.operationType == 'paiement'
+                                ? 'Veuillez saisir votre code PIN pour confirmer le paiement'
+                                : widget.isFirstLogin
+                                    ? 'Veuillez créer votre code secret Orange Money !'
+                                    : 'Veuillez saisir votre code secret Orange Money !',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.white70,
+                          height: 1.4,
+                        ),
+                      ),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          _errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.redAccent,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 18),
+                      // Indicateurs de code PIN
+                      _isLoading
+                          ? const SizedBox(
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(_pinLength, (index) {
+                                return Container(
+                                  margin:
+                                      const EdgeInsets.symmetric(horizontal: 7),
+                                  width: 16,
+                                  height: 16,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: index < _pinCode.length
+                                        ? Colors.white
+                                        : Colors.white.withOpacity(0.25),
+                                  ),
+                                );
+                              }),
+                            ),
+                      const SizedBox(height: 16),
+                      // Clavier numérique custom
+                      _buildPinKeyboard(),
+                      const SizedBox(height: 12),
+                      // Bouton Confirmer (seulement pour les opérations)
+                      if (widget.operationType != null) ...[
+                        SizedBox(
+                          width: double.infinity,
+                          height: 46,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFF6B00),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: _pinCode.length == _pinLength
+                                ? _authenticateWithPin
+                                : null,
+                            child: const Text(
+                              'Confirmer',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                      // Bouton Fermer
                       SizedBox(
                         width: double.infinity,
                         height: 46,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF6B00),
-                            foregroundColor: Colors.white,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                                color: Colors.white.withOpacity(0.5),
+                                width: 1.5),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
+                            backgroundColor: Colors.transparent,
                           ),
-                          onPressed: _pinCode.length == _pinLength
-                              ? () {
-                                  print('Confirmer button pressed');
-                                  _authenticateWithPin();
-                                }
-                              : null,
+                          onPressed: () => Navigator.pop(
+                              context, widget.operationType != null),
                           child: const Text(
-                            'Confirmer',
+                            'Fermer',
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                              color: Colors.white70,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
                     ],
-                    // Bouton Fermer
-                    SizedBox(
-                      width: double.infinity,
-                      height: 46,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(
-                              color: Colors.white.withOpacity(0.5), width: 1.5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          backgroundColor: Colors.transparent,
-                        ),
-                        onPressed: () => Navigator.pop(
-                            context, widget.operationType != null),
-                        child: const Text(
-                          'Fermer',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      }),
     );
   }
 
