@@ -21,7 +21,7 @@ class OTPField extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: width,
-      height: 55,
+      height: 70,
       decoration: BoxDecoration(
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
@@ -39,7 +39,7 @@ class OTPField extends StatelessWidget {
         keyboardType: TextInputType.number,
         maxLength: 1,
         style: const TextStyle(
-          fontSize: 24,
+          fontSize: 28,
           fontWeight: FontWeight.bold,
           color: Colors.black,
         ),

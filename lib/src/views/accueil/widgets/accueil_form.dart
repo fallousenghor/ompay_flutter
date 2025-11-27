@@ -51,13 +51,13 @@ class AccueilForm extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.asset(
-                  'assets/images/bgacueil.jpeg',
-                  width: 80,
-                  height: 80,
+                  'assets/images/scan.jpeg',
+                  width: 85,
+                  height: 85,
                   fit: BoxFit.cover,
                 ),
               ),

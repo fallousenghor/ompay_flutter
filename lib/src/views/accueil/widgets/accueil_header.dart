@@ -32,9 +32,9 @@ class _AccueilHeaderState extends State<AccueilHeader> {
         ? (user.nomComplet.isNotEmpty
             ? '${user.nomComplet} '
             : user.numeroTelephone)
-        : 'Utilisateur non connecté';
+        : 'U';
     final String displayBalance = _isBalanceVisible
-        ? (balance != null ? balance.toStringAsFixed(0) : 'Non disponible')
+        ? (balance != null ? balance.toStringAsFixed(0) : '0')
         : '••••••';
 
     return Container(
@@ -70,22 +70,24 @@ class _AccueilHeaderState extends State<AccueilHeader> {
                         ),
                         const Spacer(),
                         Container(
-                          width: 80,
-                          height: 80,
+                          width: 100,
+                          height: 100,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: Colors.white, width: 2),
                           ),
-                          child: Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(2),
                             child: dashboard?.qrCode != null
                                 ? QrImageView(
                                     data: dashboard!.qrCode!.donnees,
-                                    size: 65.0,
+                                    size: 120,
+                                    // ignore: deprecated_member_use
                                     foregroundColor: const Color(0xFF23232B),
                                   )
                                 : const Icon(Icons.qr_code,
-                                    size: 65, color: Color(0xFF23232B)),
+                                    size: 96, color: Color(0xFF23232B)),
                           ),
                         ),
                       ],

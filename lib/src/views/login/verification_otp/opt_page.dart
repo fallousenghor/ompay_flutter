@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_app/src/models/auth_models/auth_models.dart';
 import 'package:flutter_app/src/providers/service_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'widgets/otp_background.dart';
-import 'widgets/otp_logo_row.dart';
 import 'widgets/otp_card.dart';
 import 'widgets/otp_field.dart';
 
@@ -279,11 +277,10 @@ class _OTPVerificationPageState extends State<OTPVerificationPage> {
       body: Stack(
         children: [
           const OTPBackground(),
-          const OTPLogoRow(),
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: EdgeInsets.zero,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [

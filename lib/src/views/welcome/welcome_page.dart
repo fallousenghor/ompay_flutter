@@ -17,10 +17,13 @@ class OMPayScreen extends StatelessWidget {
         child: Column(
           children: [
             const WelcomeHeader(),
-            const WelcomePagination(),
-            const SizedBox(height: 60),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: WelcomePagination(),
+            ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.08),
             WelcomeForm(phoneController: phoneController),
-            // ...existing code...
+            SizedBox(height: MediaQuery.of(context).size.height * 0.1),
             const WelcomeFooter(),
           ],
         ),

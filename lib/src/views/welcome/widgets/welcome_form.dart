@@ -42,10 +42,6 @@ class _WelcomeFormState extends State<WelcomeForm> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Redirection vers la page de vérification...')),
-      );
       GoRouter.of(context).go('/otp', extra: {
         'phoneNumber': formattedPhoneNumber,
         'token': '',
@@ -61,50 +57,66 @@ class _WelcomeFormState extends State<WelcomeForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Text(
-          "Bienvenue sur OM Pay!",
-          style: TextStyle(
-              fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
-        ),
-        const SizedBox(height: 10),
-        const Text(
-          "Entrez votre numéro mobile pour\nvous connecter",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 15,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 25),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25),
-          child: TextField(
-            controller: widget.phoneController,
-            keyboardType: TextInputType.phone,
-            decoration: InputDecoration(
-              hintText: "Saisir mon numéro (771234567)",
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              errorText: _errorMessage,
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 360;
+    final horizontalPadding = screenSize.width * 0.08; // 8% of screen width
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+      child: Column(
+        children: [
+          Text(
+            "Bienvenue sur OM Pay!",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: isSmallScreen ? 18 : 20,
+              color: Colors.white,
             ),
           ),
-        ),
-        const SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25),
-          child: ElevatedButton(
+          const SizedBox(height: 10),
+          Text(
+            "Entrez votre numéro mobile pour\nvous connecter",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: isSmallScreen ? 13 : 15,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: screenSize.height * 0.04),
+          TextField(
+            controller: widget.phoneController,
+            keyboardType: TextInputType.phone,
+            style: const TextStyle(color: Colors.black),
+            decoration: InputDecoration(
+              hintText: "Saisir mon numéro (771234567)",
+              hintStyle: const TextStyle(color: Colors.grey),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+              filled: true,
+              fillColor: Colors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide:
+                    const BorderSide(color: Color(0xFFFF6B00), width: 2),
+              ),
+              errorText: _errorMessage,
+              errorStyle: const TextStyle(color: Colors.redAccent),
+            ),
+          ),
+          SizedBox(height: screenSize.height * 0.03),
+          ElevatedButton(
             onPressed: _isLoading ? null : _initiateLogin,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              minimumSize: const Size(double.infinity, 48),
+              backgroundColor: const Color(0xFFFF6B00),
+              minimumSize: Size(double.infinity, isSmallScreen ? 44 : 48),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
+              elevation: 2,
             ),
             child: _isLoading
                 ? const SizedBox(
@@ -115,16 +127,17 @@ class _WelcomeFormState extends State<WelcomeForm> {
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : const Text(
+                : Text(
                     "Se connecter",
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 17,
+                      fontSize: isSmallScreen ? 15 : 17,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

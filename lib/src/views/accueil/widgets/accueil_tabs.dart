@@ -35,19 +35,23 @@ class AccueilTabs extends StatelessWidget {
             ),
           ),
           Container(
-            width: 40,
-            height: 40,
-            margin: const EdgeInsets.symmetric(horizontal: 6),
-            decoration: const BoxDecoration(
-              color: Color(0xFFFFB800),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.phishing_outlined,
-              color: Color(0xFF23232B),
-              size: 22,
-            ),
-          ),
+              width: 30,
+              height: 30,
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFB800),
+                shape: BoxShape.circle,
+              ),
+              child: const Center(
+                child: Text(
+                  'π',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )),
         ],
       ),
     );

@@ -6,11 +6,15 @@ class WelcomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 360;
+    final headerHeight = screenSize.height * 0.35; // Responsive height
+
     return ClipPath(
       clipper: HeaderClipper(),
       child: Container(
         width: double.infinity,
-        height: 350,
+        height: headerHeight,
         decoration: const BoxDecoration(
           color: Colors.black,
         ),
@@ -26,8 +30,8 @@ class WelcomeHeader extends StatelessWidget {
               ),
             ),
             Positioned(
-              left: 20,
-              bottom: 90,
+              left: screenSize.width * 0.05, // Responsive left padding
+              bottom: headerHeight * 0.25, // Responsive bottom position
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -35,7 +39,7 @@ class WelcomeHeader extends StatelessWidget {
                     children: [
                       Image.asset(
                         "assets/images/logor.png",
-                        height: 50,
+                        height: isSmallScreen ? 35 : 50,
                       ),
                       const SizedBox(width: 10),
                       RichText(
@@ -43,16 +47,16 @@ class WelcomeHeader extends StatelessWidget {
                           children: [
                             TextSpan(
                               text: AppLocalizations.of(context)!.orange,
-                              style: const TextStyle(
-                                fontSize: 33,
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 24 : 33,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFFFF6B00),
+                                color: const Color(0xFFFF6B00),
                               ),
                             ),
                             TextSpan(
                               text: AppLocalizations.of(context)!.money,
-                              style: const TextStyle(
-                                fontSize: 32,
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 23 : 32,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
@@ -62,22 +66,22 @@ class WelcomeHeader extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  SizedBox(height: screenSize.height * 0.02),
                   RichText(
                     text: TextSpan(
                       children: [
                         TextSpan(
                           text: AppLocalizations.of(context)!.transfer,
-                          style: const TextStyle(
-                            fontSize: 25,
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 18 : 25,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFFFF6B00),
+                            color: const Color(0xFFFF6B00),
                           ),
                         ),
                         TextSpan(
                           text: AppLocalizations.of(context)!.moneyTransfer,
-                          style: const TextStyle(
-                            fontSize: 23,
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 16 : 23,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -87,12 +91,12 @@ class WelcomeHeader extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   SizedBox(
-                    width: 250,
+                    width: screenSize.width * 0.7, // Responsive width
                     child: Text(
                       AppLocalizations.of(context)!.sendQuickly,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 15,
+                        fontSize: isSmallScreen ? 12 : 15,
                         height: 1.4,
                       ),
                     ),

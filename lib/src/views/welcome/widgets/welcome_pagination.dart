@@ -5,14 +5,26 @@ class WelcomePagination extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isSmallScreen = screenSize.width < 360;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        const CircleAvatar(radius: 15, backgroundColor: Colors.orange),
-        const SizedBox(width: 15),
-        CircleAvatar(radius: 10, backgroundColor: Colors.grey.shade400),
-        const SizedBox(width: 15),
-        CircleAvatar(radius: 10, backgroundColor: Colors.grey.shade400),
+        CircleAvatar(
+          radius: isSmallScreen ? 12 : 15,
+          backgroundColor: const Color(0xFFFF6B00),
+        ),
+        SizedBox(width: screenSize.width * 0.04),
+        CircleAvatar(
+          radius: isSmallScreen ? 8 : 10,
+          backgroundColor: Colors.grey.shade400,
+        ),
+        SizedBox(width: screenSize.width * 0.04),
+        CircleAvatar(
+          radius: isSmallScreen ? 8 : 10,
+          backgroundColor: Colors.grey.shade400,
+        ),
       ],
     );
   }

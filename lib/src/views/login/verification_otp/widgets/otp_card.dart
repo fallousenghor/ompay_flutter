@@ -27,8 +27,8 @@ class OTPCard extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
           width: double.infinity,
-          constraints: const BoxConstraints(maxWidth: 400),
-          padding: const EdgeInsets.all(32),
+          constraints: const BoxConstraints(),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.10),
             borderRadius: BorderRadius.circular(28),
@@ -49,7 +49,6 @@ class OTPCard extends StatelessWidget {
                 width: 90,
                 height: 90,
                 decoration: BoxDecoration(
-                  color: Colors.white,
                   borderRadius: BorderRadius.circular(22),
                   boxShadow: [
                     BoxShadow(
@@ -59,11 +58,11 @@ class OTPCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Center(
-                  child: Icon(
-                    Icons.shield,
-                    color: Color(0xFFFF6B00),
-                    size: 52,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Image.asset(
+                    'assets/images/logor.png',
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),
@@ -90,11 +89,11 @@ class OTPCard extends StatelessWidget {
               const SizedBox(height: 32),
               LayoutBuilder(
                 builder: (context, constraints) {
-                  double spacing = 8;
+                  double spacing = 6;
                   double totalSpacing = spacing * 5;
                   double availableWidth = constraints.maxWidth - totalSpacing;
                   double boxWidth = availableWidth / 6;
-                  boxWidth = boxWidth.clamp(20.0, 48.0);
+                  boxWidth = boxWidth.clamp(35.0, 55.0);
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(6, (index) {
