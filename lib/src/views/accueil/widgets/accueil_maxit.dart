@@ -25,7 +25,7 @@ class AccueilMaxItSection extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 16),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: const Color(0xFF23232B),
+            color: const Color(0xFF23232B).withOpacity(0.9),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(

@@ -1,17 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:qr_code_scanner/qr_code_scanner.dart';
 
-class AccueilForm extends StatelessWidget {
+class AccueilForm extends StatefulWidget {
   final int selectedTab;
   final TextEditingController numeroController;
   final TextEditingController montantController;
   final VoidCallback? onValidate;
+  final Function(String)? onScan;
   const AccueilForm(
       {super.key,
       required this.selectedTab,
       required this.numeroController,
       required this.montantController,
-      this.onValidate});
+      this.onValidate,
+      this.onScan});
+
+  @override
+  State<AccueilForm> createState() => _AccueilFormState();
+}
+
+class _AccueilFormState extends State<AccueilForm> {
+  bool isScanning = false;
+  final GlobalKey qrKey = GlobalKey(debugLabel: 'QR');
+  QRViewController? controller;
+
+  @override
+  void dispose() {
+    controller?.dispose();
+    super.dispose();
+  }
+
+  void _onQRViewCreated(QRViewController controller) {
+    this.controller = controller;
+    controller.scannedDataStream.listen((scanData) {
+      if (scanData.code != null) {
+        setState(() {
+          isScanning = false;
+        });
+        widget.onScan?.call(scanData.code!);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +49,7 @@ class AccueilForm extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF23232B),
+        color: const Color(0xFF23232B).withOpacity(0.9),
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -32,34 +62,49 @@ class AccueilForm extends StatelessWidget {
       child: Column(
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
                 child: Column(
                   children: [
                     _buildTextField(
-                      controller: numeroController,
-                      hint: selectedTab == 0
+                      controller: widget.numeroController,
+                      hint: widget.selectedTab == 0
                           ? AppLocalizations.of(context)!.inputMerchant
                           : AppLocalizations.of(context)!.inputRecipient,
                     ),
                     const SizedBox(height: 10),
                     _buildTextField(
-                      controller: montantController,
+                      controller: widget.montantController,
                       hint: AppLocalizations.of(context)!.inputAmount,
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  'assets/images/scan.jpeg',
-                  width: 85,
-                  height: 85,
-                  fit: BoxFit.cover,
-                ),
+              SizedBox(
+                width: 110,
+                height: 110,
+                child: isScanning
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: QRView(
+                          key: qrKey,
+                          onQRViewCreated: _onQRViewCreated,
+                        ),
+                      )
+                    : GestureDetector(
+                        onTap: () => setState(() => isScanning = true),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            'assets/images/scan.jpeg',
+                            width: 150,
+                            height: 150,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
               ),
             ],
           ),
@@ -68,7 +113,7 @@ class AccueilForm extends StatelessWidget {
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: onValidate,
+              onPressed: widget.onValidate,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFF6B00),
                 foregroundColor: Colors.white,

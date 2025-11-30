@@ -13,7 +13,7 @@ class AccueilTabs extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       height: 54,
       decoration: BoxDecoration(
-        color: const Color(0xFF23232B),
+        color: const Color(0xFF23232B).withOpacity(0.9),
         borderRadius: BorderRadius.circular(28),
       ),
       child: Row(

@@ -113,7 +113,8 @@ class _AccueilHistoriqueState extends State<AccueilHistorique> {
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 8),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF1F2937),
+                                  color:
+                                      const Color(0xFF1F2937).withOpacity(0.9),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 padding: const EdgeInsets.all(12),

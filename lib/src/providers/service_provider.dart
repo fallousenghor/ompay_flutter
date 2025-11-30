@@ -28,6 +28,10 @@ class ServiceProvider with ChangeNotifier {
   double? _currentBalance;
   DashboardResponse? _dashboard;
 
+  bool _isLoadingUser = true;
+  bool _isLoadingBalance = true;
+  bool _isLoadingDashboard = true;
+
   // Constructor
   ServiceProvider() {
     _initializeServices();
@@ -57,7 +61,16 @@ class ServiceProvider with ChangeNotifier {
   double? get currentBalance => _currentBalance;
   DashboardResponse? get dashboard => _dashboard;
 
+  bool get isLoadingUser => _isLoadingUser;
+  bool get isLoadingBalance => _isLoadingBalance;
+  bool get isLoadingDashboard => _isLoadingDashboard;
+
+  bool get isLoading =>
+      _isLoadingUser || _isLoadingBalance || _isLoadingDashboard;
+
   Future<void> fetchUserProfile() async {
+    _isLoadingUser = true;
+    notifyListeners();
     final response = await _userService.getUserProfile();
     if (response.success && response.data != null) {
       _currentUser = response.data!;
@@ -65,33 +78,42 @@ class ServiceProvider with ChangeNotifier {
 
       // Charger le solde après le profil
       await fetchBalance();
-
-      notifyListeners();
     }
+    _isLoadingUser = false;
+    notifyListeners();
   }
 
   Future<void> fetchBalance() async {
     if (_currentUser == null) return;
 
+    _isLoadingBalance = true;
+    notifyListeners();
     final response =
         await _walletService.getBalance(_currentUser!.numeroTelephone);
     if (response.success && response.data != null) {
       _currentBalance = response.data!;
       _saveBalanceToStorage(_currentBalance!);
     }
+    _isLoadingBalance = false;
+    notifyListeners();
   }
 
   Future<void> fetchDashboard() async {
+    _isLoadingDashboard = true;
+    notifyListeners();
     final response = await _dashboardService.getDashboard();
     if (response.success && response.data != null) {
       _dashboard = response.data!;
-      notifyListeners();
+      _saveDashboardToStorage(_dashboard!);
     }
+    _isLoadingDashboard = false;
+    notifyListeners();
   }
 
   // Authentication token management
   void setAuthToken(String token) {
     _httpService.setAuthToken(token);
+    _saveAuthTokenToStorage(token);
     notifyListeners();
   }
 
@@ -103,6 +125,10 @@ class ServiceProvider with ChangeNotifier {
 
   Future<void> _loadFromStorage() async {
     final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('authToken');
+    if (token != null) {
+      _httpService.setAuthToken(token);
+    }
     final userJson = prefs.getString('currentUser');
     if (userJson != null) {
       try {
@@ -116,6 +142,19 @@ class ServiceProvider with ChangeNotifier {
     if (balance != null) {
       _currentBalance = balance;
     }
+    final dashboardJson = prefs.getString('dashboard');
+    if (dashboardJson != null) {
+      try {
+        final dashboardMap = json.decode(dashboardJson) as Map<String, dynamic>;
+        _dashboard = DashboardResponse.fromJson(dashboardMap);
+      } catch (e) {
+        // Ignore invalid data
+      }
+    }
+    // Set loading to false after loading from storage
+    _isLoadingUser = false;
+    _isLoadingBalance = false;
+    _isLoadingDashboard = false;
     notifyListeners();
   }
 
@@ -129,13 +168,26 @@ class ServiceProvider with ChangeNotifier {
     await prefs.setDouble('currentBalance', balance);
   }
 
+  Future<void> _saveDashboardToStorage(DashboardResponse dashboard) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('dashboard', json.encode(dashboard.toJson()));
+  }
+
+  Future<void> _saveAuthTokenToStorage(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('authToken', token);
+  }
+
   Future<void> clearAuthToken() async {
     _httpService.clearAuthToken();
     _currentUser = null;
     _currentBalance = null;
+    _dashboard = null;
     final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('authToken');
     await prefs.remove('currentUser');
     await prefs.remove('currentBalance');
+    await prefs.remove('dashboard');
     notifyListeners();
   }
 }

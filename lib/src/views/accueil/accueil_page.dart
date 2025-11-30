@@ -28,7 +28,8 @@ class _OrangeMoneyHomePageState extends State<OrangeMoneyHomePage> {
   void initState() {
     super.initState();
 
-    // Fetch user profile and balance when page initializes
+    // Data is already loaded from storage in ServiceProvider constructor
+    // Now fetch fresh data
     final serviceProvider =
         Provider.of<ServiceProvider>(context, listen: false);
     serviceProvider.fetchUserProfile();
@@ -37,61 +38,93 @@ class _OrangeMoneyHomePageState extends State<OrangeMoneyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final serviceProvider = Provider.of<ServiceProvider>(context);
+    if (serviceProvider.isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/images/bgacueil.jpeg'),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF6B00)),
+            ),
+          ),
+        ),
+      );
+    }
     return Scaffold(
-      backgroundColor: const Color(0xFF18171C),
+      backgroundColor: Colors.transparent,
       drawer: const DashboardDrawer(),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return Column(
-              children: [
-                Builder(
-                  builder: (context) => AccueilHeader(
-                    openDrawer: () {
-                      Scaffold.of(context).openDrawer();
-                    },
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/images/bgacueil.jpeg'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Column(
+                children: [
+                  Builder(
+                    builder: (context) => AccueilHeader(
+                      openDrawer: () {
+                        Scaffold.of(context).openDrawer();
+                      },
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Column(
-                    children: [
-                      SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 0, vertical: 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 6),
-                            AccueilTabs(
-                              selectedTab: _selectedTab,
-                              onTabChanged: (i) =>
-                                  setState(() => _selectedTab = i),
-                            ),
-                            const SizedBox(height: 8),
-                            AccueilForm(
-                              selectedTab: _selectedTab,
-                              numeroController: _numeroController,
-                              montantController: _montantController,
-                              onValidate: _onValidate,
-                            ),
-                            const SizedBox(height: 12),
-                            const AccueilMaxItSection(),
-                            const SizedBox(height: 12),
-                          ],
+                  Expanded(
+                    child: Column(
+                      children: [
+                        SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 0, vertical: 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 6),
+                              AccueilTabs(
+                                selectedTab: _selectedTab,
+                                onTabChanged: (i) =>
+                                    setState(() => _selectedTab = i),
+                              ),
+                              const SizedBox(height: 8),
+                              AccueilForm(
+                                selectedTab: _selectedTab,
+                                numeroController: _numeroController,
+                                montantController: _montantController,
+                                onValidate: _onValidate,
+                                onScan: _onScan,
+                              ),
+                              const SizedBox(height: 12),
+                              const AccueilMaxItSection(),
+                              const SizedBox(height: 12),
+                            ],
+                          ),
                         ),
-                      ),
-                      const Expanded(
-                        child: AccueilHistorique(),
-                      ),
-                    ],
+                        const Expanded(
+                          child: AccueilHistorique(),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
+  }
+
+  void _onScan(String code) {
+    _numeroController.text = code;
   }
 
   void _onValidate() async {
